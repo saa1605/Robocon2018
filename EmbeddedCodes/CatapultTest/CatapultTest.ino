@@ -1,62 +1,54 @@
 #include <IO16.h>
 #include <SRA16.h>
 
-//
-//void setup()
-//{
-//
-//}
-//
-//void loop()
-//{
-//  {
-//    if(bit_is_clear(PIND,2))
-//    {
-//      bot_forward();
-//    }
-//    else
-//    {
-//      bot_spot_right();
-//    }
-//  }   
-//}
-
-//
-int main(void) {
-  DDRD|=(1<<PD1)|(1<<PD0);
-  DDRD&=~(1<<PD2);
-  PORTD |= (1<<PD0);
+int main(void)
+{
+  DDRB |= (1 << PB1) | (1 << PB0);
+  DDRB &= ~(1 << PB2);
+  PORTB |= (1 << PB0);
+  DDRD |= 0xF0;
+  PORTD |= 0x0F;
   DDRC = 0xFF;
   PORTC = 0x00;
-  
+
   pwm1_init();
   set_pwm1a(399);
   set_pwm1b(399);
-
-//
-//while(1)
-//{
-//  
-////PORTD |=(1<<PD0);
-////PORTD &= ~(1<<PD1);
-////  
-//if(bit_is_set(PIND,2))
-//{
-//  PORTC=0xFF;
-// }
-// else
-// PORTC=0x00;
-//}
-
-while(1)
- {
-    if(bit_is_clear(PIND,2))
+  bool flag = true;
+  //  bool currentState = false;
+  while (1)
+  {
+    if (bit_is_clear(PINB, 2))
     {
-      bot_forward();
+      if (flag)
+      {
+        bot_forward();
+        _delay_ms(300);
+        flag = false;
+      }
     }
+//    else if (bit_is_clear(PIND, 1))
+//    {
+//      if (flag)
+//      {
+//        flag = false;
+//      }
+//      else
+//        flag = true;
+//    }
+    else if (bit_is_clear(PIND, 3))
+    {
+      bot_backward();
+      _delay_ms(151);
+      flag = true;
+    }
+    //    else if (bit_is_clear(PIND,0))
+    //    {
+    //      flag = true;
+    //    }
     else
     {
-      bot_spot_right();
+      bot_stop();
     }
-  } 
+  }
 }
