@@ -10,6 +10,9 @@
 #define SCLK PB1 
 #define SS PB0 
 
+#define frontSlaveSelect PF2
+#define backSlaveSelect PF3
+
 uint8_t x = 0xFF;
 uint8_t LSBData;
 uint8_t MSBData;
@@ -64,10 +67,17 @@ void getSensorReadings()
 { 
   for(int i = 0; i < 8; i++)
   {
-    PORTF &= ~(1 << PF2);
+    PORTF &= ~(1 << frontSlaveSelect);
     readAdc(i);
-    sensorReadings[i] = adcValue;
-    PORTF |= (1 << PF2);
+    sensorReadingsFront[i] = adcValue;
+    PORTF |= (1 << frontSlaveSelect);
+  }
+  for(int i = 0; i < 8; i++)
+  {
+    PORTF &= ~(1 << backSlaveSelect);
+    readAdc(i);
+    sensorReadingsBack[i] = adcValue;
+    PORTF |= (1 << backSlaveSelect);
   }
 }
 
@@ -99,7 +109,8 @@ void multiplyWeightagesToReadings()
 {
   for(int i = 0; i < 8; i++)
   {
-    sensorReadings[i] *= weightages[i];
+    sensorReadingsFront[i] *= weightages[i];
+    sensorReadingsBack[i] *= weightages[i];
   } 
 }
 
@@ -108,13 +119,15 @@ float getLinePosition()
   getSensorReadings();
   for(int i = 0; i < 8; i++)
   {
-    sum += sensorReadings[i];     
+    sumFront += sensorReadingsFront[i];
+    sumBack += sensorReadingsBack[i];
   }
   multiplyWeightagesToReadings();
   for(int i = 0; i < 8; i++)
   {
-    weightedSum += sensorReadings[i];     
+    weightedSumFront += sensorReadingsFront[i];
+    weightedSumBack += sensorReadingsBack[i];
   }
 
-  return weightedSum / sum;    
+  return (weightedSumFront / sumFront)*0.5 + (weightedSumBack / sumBack)*(-0.5);  //Sensors symmetric to center and opposite errors
 }
