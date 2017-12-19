@@ -5,7 +5,6 @@
 #include<util/delay.h>
 #include<avr/interrupt.h>
 
-
 #define MOSI PB2
 #define MISO PB3 
 #define SCLK PB1 
@@ -41,7 +40,7 @@ unsigned char spiTransfer(unsigned char data)
   
 }
 
-void convertSensorBit(void)
+void convertBit(void)
 {
   MSBData = MSBData & 0b00001111;
   adcValue = (MSBData <<8) | LSBData;
@@ -60,21 +59,19 @@ void readAdc(int channel)
   }
   MSBData = spiTransfer(channelbit);
   LSBData = spiTransfer(x);
-  convertSensorBit();  
+  convertBit();  
 }
 
 void getSensorReadings()
 {
-  
-    //spiMasterInit();    TO BE CALLED IN SETUP
+  spiMasterInit();  
   
     for(int i=0; i<8; i++)
     {
       PORTF &= ~ (1<<PF2);
       readAdc(i);
-      PORTF |= (1<<PF2);
-
       sensorReadings[i] = adcValue;
+      PORTF |= (1<<PF2);
     }
 }
 
