@@ -1,7 +1,7 @@
 #include <io128.h>
 #include <sra128.h>
 
-#include "PID.h"
+#include "Pid.h"
 
 #define MOTORLA   REGISTER_BIT(PORTC,0) //whether to give the Encoder_PID to front and back motors
 #define MOTORLB   REGISTER_BIT(PORTC,1)
@@ -13,7 +13,7 @@
 
 #define opt 0
 
-float PID_Error = 0;
+float pidError = 0;
 
 float lowerPWMConstrain = 0;
 float higherPWMConstrain = 0;
@@ -27,25 +27,26 @@ void setup()
   pwm1_init();
   DDRF |= 0xFF;
   PORTF |= 0xFF;
+  spiMasterInit();
 }
 
 void loop()
 {
-  PID_Error = get_PID_Error();
+  pidError = getPidError();
   
-  if (PID_Error > 0)
-    bot_Left();
-  else if (PID_Error < 0)
-    bot_Right();
-  else bot_Brake();
+  if (pidError > 0)
+    botLeft();
+  else if (pidError < 0)
+    botRight();
+  else botBrake();
   
-  PWML = constrain(opt + PID_Error, lowerPWMConstrain, higherPWMConstrain);
-  PWMR = constrain(opt - PID_Error, lowerPWMConstrain, higherPWMConstrain);
+  PWML = constrain(opt + pidError, lowerPWMConstrain, higherPWMConstrain);
+  PWMR = constrain(opt - pidError, lowerPWMConstrain, higherPWMConstrain);
 
-  print_data();
+  printData();
 }
 
-void bot_Left()
+void botLeft()
 {
   MOTORLA = 0;
   MOTORLB = 1;
@@ -54,7 +55,7 @@ void bot_Left()
   MOTORRB = 0;
 }
 
-void bot_Right()
+void botRight()
 {
   MOTORLA = 1;
   MOTORLB = 0;
@@ -63,7 +64,7 @@ void bot_Right()
   MOTORRB = 1;
 }
 
-void bot_Brake()
+void botBrake()
 {
   MOTORLA = 1;
   MOTORLB = 1;
@@ -72,8 +73,7 @@ void bot_Brake()
   MOTORRB = 1;
 }
 
-void print_data()
+void printData()
 {
-  Serial.println(PID_Error);
+  Serial.println(pidError);
 }
-

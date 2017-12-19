@@ -24,26 +24,24 @@ int sum,weightedSum;
 
 void spiMasterInit(void)
 {
-  DDRB |= (1 << MOSI) | (1 << SCLK) | (1<<SS);
-  PORTB |= (1<<SS);
-  DDRF |= (1<<PF2); //MCP CS
+  DDRB |= (1 << MOSI) | (1 << SCLK) | (1 << SS);
+  PORTB |= (1 << SS);
+  DDRF |= (1 << PF2); //MCP CS
   SPCR |= (1 << SPE) | (1 << MSTR) | (1 << SPR0)| (1 << SPR1);
 }
 
 unsigned char spiTransfer(unsigned char data)
 {
-  
-  SPDR =data;
+  SPDR = data;
  
-  while(!(SPSR & (1<<SPIF)));
-  return(SPDR);
-  
+  while(!(SPSR & (1 << SPIF)));
+  return(SPDR); 
 }
 
 void convertBit(void)
 {
   MSBData = MSBData & 0b00001111;
-  adcValue = (MSBData <<8) | LSBData;
+  adcValue = (MSBData << 8) | LSBData;
 }
 
 void readAdc(int channel)
@@ -63,16 +61,14 @@ void readAdc(int channel)
 }
 
 void getSensorReadings()
-{
-  spiMasterInit();  
-  
-    for(int i=0; i<8; i++)
-    {
-      PORTF &= ~ (1<<PF2);
-      readAdc(i);
-      sensorReadings[i] = adcValue;
-      PORTF |= (1<<PF2);
-    }
+{ 
+  for(int i = 0; i < 8; i++)
+  {
+    PORTF &= ~(1 << PF2);
+    readAdc(i);
+    sensorReadings[i] = adcValue;
+    PORTF |= (1 << PF2);
+  }
 }
 
 void assignWeightages(float w0, float w1, float w2, float w3, float w4, float w5, float w6, float w7)
@@ -85,46 +81,40 @@ void assignWeightages(float w0, float w1, float w2, float w3, float w4, float w5
   weightages[5] = w5;
   weightages[6] = w6;
   weightages[7] = w7;
-  for(int i = 0;i < 8; i++)
-  {
-    weightages[i]*=1000; 
-  }
 }
-
 
 void decideWeightages()
 {
   if(!isSmooth)
   {
-    assignWeightages(-7,-5,-3,-1,1,3,5,7);  
+    assignWeightages(-7, -5, -3, -1, 1, 3, 5, 7);  
   }  
   else
   {
-    assignWeightages(-3.5,-2.5,-1.5,-0.5,0.5,1.5,2.5,3.5);
+    assignWeightages(-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5);
   }
 }
-
 
 void multiplyWeightagesToReadings()
 {
-  for(int i=0;i<8;i++)
+  for(int i = 0; i < 8; i++)
   {
-    sensorReadings[i]*=weightages[i];
+    sensorReadings[i] *= weightages[i];
   } 
 }
 
-float get_line_position()
+float getLinePosition()
 { 
   getSensorReadings();
-  for(int i=0;i<8;i++)
+  for(int i = 0; i < 8; i++)
   {
-    sum+=sensorReadings[i];     
+    sum += sensorReadings[i];     
   }
   multiplyWeightagesToReadings();
-  for(int i=0;i<8;i++)
+  for(int i = 0; i < 8; i++)
   {
-    weightedSum+=sensorReadings[i];     
+    weightedSum += sensorReadings[i];     
   }
 
-  return weightedSum/sum;    
+  return weightedSum / sum;    
 }

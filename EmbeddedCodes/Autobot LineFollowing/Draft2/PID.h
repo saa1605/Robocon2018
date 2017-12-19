@@ -1,66 +1,65 @@
 #include "SensorReadings.h"
-//#include "EncoderReadings.h"  ---------------------------
+#include "EncoderReadings.h"
 
-#define LKp 0
-#define LKi 0
-#define LKd 0
+#define lKp 0
+#define lKi 0
+#define lKd 0
 
-#define EKp 0
-#define EKi 0
-#define EKd 0
+#define eKp 0
+#define eKi 0
+#define eKd 0
 
-#define LineIntegralLimit 0
-#define EncoderIntegralLimit 0
+#define lineIntegralLimit 0
+#define encoderIntegralLimit 0
 
-#define LineWeight 0
-#define SmoothLineWeight 0
+#define lineWeight 0
+#define smoothLineWeight 0
 
-#define EncoderWeight 0
-#define SmoothEncoderWeight 0
+#define encoderWeight 0
+#define smoothEncoderWeight 0
 
-float LineError = 0, LineDiff = 0, LineIntegral = 0, LinePID = 0, PrevLineError = 0;
-float EncoderError = 0, EncoderDiff = 0, EncoderIntegral = 0, EncoderPID = 0, PrevEncoderError = 0;
+float lineError = 0, lineDiff = 0, lineIntegral = 0, linePid = 0, prevLineError = 0;
+float encoderError = 0, encoderDiff = 0, encoderIntegral = 0, encoderPid = 0, prevEncoderError = 0;
 
-float LinePos = get_line_position();
-float EncoderPos = 0;
-//float EncoderPos = get_encoder_position();  ------------------
+float linePos = getLinePosition();
+float encoderPos = getEncoderPosition();
 
-void calc_Line_PID()
+void calcLinePid()
 {
-  LineError = LinePos;
-  LineDiff = LineError - PrevLineError;
-  LineIntegral += LineError;
-  if(LineIntegral > LineIntegralLimit)
-    LineIntegral = LineIntegralLimit;
-  else if(LineIntegral < (-1)*LineIntegralLimit)
-    LineIntegral = (-1)*LineIntegralLimit;
-  LinePID = LKp*LineError + LKi*LineIntegral + LKd*LineDiff;
-  PrevLineError = LineError;
+  lineError = linePos;
+  lineDiff = lineError - prevLineError;
+  lineIntegral += lineError;
+  if(lineIntegral > lineIntegralLimit)
+    lineIntegral = lineIntegralLimit;
+  else if(lineIntegral < (-1)*lineIntegralLimit)
+    lineIntegral = (-1)*lineIntegralLimit;
+  linePid = lKp*lineError + lKi*lineIntegral + lKd*lineDiff;
+  prevLineError = lineError;
 }
 
-void calc_Encoder_PID()
+void calcEncoderPid()
 {
-  EncoderError = EncoderPos;
-  EncoderDiff = EncoderError - PrevEncoderError;
-  EncoderIntegral += EncoderError;
-  if(EncoderIntegral > EncoderIntegralLimit)
-    EncoderIntegral = EncoderIntegralLimit;
-  else if(EncoderIntegral < (-1)*EncoderIntegralLimit)
-    EncoderIntegral = (-1)*EncoderIntegralLimit;
-  EncoderPID = EKp*EncoderError + EKi*EncoderIntegral + EKd*EncoderDiff;
-  PrevEncoderError = EncoderError;
+  encoderError = encoderPos;
+  encoderDiff = encoderError - prevEncoderError;
+  encoderIntegral += encoderError;
+  if(encoderIntegral > encoderIntegralLimit)
+    encoderIntegral = encoderIntegralLimit;
+  else if(encoderIntegral < (-1)*encoderIntegralLimit)
+    encoderIntegral = (-1)*encoderIntegralLimit;
+  encoderPid = eKp*encoderError + eKi*encoderIntegral + eKd*encoderDiff;
+  prevEncoderError = encoderError;
 }
 
-float get_PID_Error()
+float getPidError()
 {
-  calc_Line_PID();
-  calc_Encoder_PID();
+  calcLinePid();
+  calcEncoderPid();
   if(isSmooth)
   {
-    return (SmoothLineWeight*LinePID + SmoothEncoderWeight*EncoderPID); 
+    return (smoothLineWeight*linePid + smoothEncoderWeight*encoderPid); 
   }
   else
   {
-    return (LineWeight*LinePID + EncoderWeight*EncoderPID); 
+    return (lineWeight*linePid + encoderWeight*encoderPid); 
   }
 }
