@@ -35,10 +35,10 @@ void loop()
   pidError = getPidError();
   
   if (pidError > 0)
-    botLeft();
+    bot_left();
   else if (pidError < 0)
-    botRight();
-  else botBrake();
+    bot_right();
+  else bot_brake();
   
   PWML = constrain(opt + pidError, lowerPWMConstrain, higherPWMConstrain);
   PWMR = constrain(opt - pidError, lowerPWMConstrain, higherPWMConstrain);
@@ -46,7 +46,7 @@ void loop()
   printData();
 }
 
-void botLeft()
+void bot_left()
 {
   MOTORLA = 0;
   MOTORLB = 1;
@@ -55,7 +55,7 @@ void botLeft()
   MOTORRB = 0;
 }
 
-void botRight()
+void bot_right()
 {
   MOTORLA = 1;
   MOTORLB = 0;
@@ -64,7 +64,7 @@ void botRight()
   MOTORRB = 1;
 }
 
-void botBrake()
+void bot_brake()
 {
   MOTORLA = 1;
   MOTORLB = 1;
@@ -76,4 +76,17 @@ void botBrake()
 void printData()
 {
   Serial.println(pidError);
+}
+
+void first_turn()
+{
+  /*if(((rightFirst + rightSecond) > sideSensorThreshold * 2)  && ((leftFirst + leftSecond) < sideSensorThreshold * 2))
+  {
+    bot_brake();
+    _delay_ms(250);
+    while(weightedSumFront >= bottomThreshold)
+    {
+      bot_spot_right();  
+    }//commense turning action
+  }*/
 }
