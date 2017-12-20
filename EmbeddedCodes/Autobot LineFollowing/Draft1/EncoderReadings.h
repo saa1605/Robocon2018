@@ -25,7 +25,7 @@ int16_t getEncoderReadings()
   uint8_t MSBData;
   int16_t encoderData;
 
-//  spiMasterInit();    TO BE CALLED IN SETUP
+//  spiMasterInit();    TO BE CALLED IN SETU  ` 
   PORTD &= ~ (1<<PD7);
   MSBData=spiTransfer(x);
   LSBData=spiTransfer(x);
