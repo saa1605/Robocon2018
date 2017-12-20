@@ -3,11 +3,13 @@
 #include <io128.h>
 #include <sra128.h>
 
+#include"avr/io.h"
+#include"avr/interrupt.h"
+
 #include <psx.h>
 #include <psx2.h>
 
 #define joystickBuffer 35
-
 
 
 int sLeft, sRight, sFront, sBack;
@@ -19,56 +21,91 @@ void setup()
   DDRC = 0xFF;
   DDRB |= 0b11110000;
   baseMotorsInitialize();
+  DDRD &= ~(1 << BSUP);
+  DDRD &= ~(1 << BSDOWN);
+  PORTD |= (1 << BSUP);
+  PORTD |= (1 << BSDOWN);
+  MCUCR = 0x02;
+  EICRA = 0xA0;//FOR INTERRUPT 2 AND 3(IF CHANGING CHANGE
+  EIMSK |= 0x0C;//VECTORS AND PIN DEFS
+  sei();
   LMGInitialize();
-  DDRD |= 1 << PD0;
-  PORTD |= 1 << PD0;
 
   Serial.begin(9600);
+
 }
 void loop()
 {
-  if (readController()) {
-    psx_read_gamepad();
-    baseMotorsMotion();
-    LMGMotion();
-  }
+//  if (readController()) {
+  psx_read_gamepad();
+  baseMotorsMotion();
+  LMGMotion();
+//  }
 
-  else {
-    botKill();
-    psx_init(&PORTG, 0, &PORTG, 3, &PORTG, 1, &PORTG, 2);
-
-  }
+//  else {
+//    Serial.println("Controller Disconnected");
+//    botKill();
+////    psx_init(&PORTG, 0, &PORTG, 3, &PORTG, 1, &PORTG, 2);
+//  }  
+//
+//  if(!readController()){
+//    botKill();
+//    psx_init(&PORTG, 0, &PORTG, 3, &PORTG, 1, &PORTG, 2);
+//  }
 }
 
-void LMGMotion()
-{
-  if (psx_button_press(PSB_PAD_UP))
-  {
-    LMGA = 1;
-    LMGB = 0;
-    LMGBRAKE = 1;
-    Serial.println("Lmg up");
-  }
-  else if (psx_button_press(PSB_PAD_DOWN))
-  {
-    LMGA = 0;
-    LMGB = 1;
-    LMGBRAKE = 1;
-    Serial.println("LMG down");
-  }
-  else
-  {
-    LMGA = 1;
-    LMGB = 1;
-    LMGBRAKE = 0;
-  }
-}
 void LMGInitialize(){
   DDRD |= (1 << LMGA) | (1 << LMGB) | (1 << LMGBRAKE);
   PORTD &= ~(1 << LMGA);
   PORTD &= ~(1 << LMGB);
   PORTD &= ~(1 << LMGBRAKE);
 }
+
+void LMGMotion()
+{
+  if (psx_button_press(PSB_PAD_UP))
+  {
+    if (BSUP) {
+      LMGA = 1;
+      LMGB = 0;
+      LMGBRAKE = 1;
+      Serial.println("Lmg up");
+    }
+    else if(!BSUP){
+      LMGA = 1;
+      LMGB = 1;
+      LMGBRAKE = 0;
+      Serial.println("up break");
+      
+    }
+  }
+  else if (psx_button_press(PSB_PAD_DOWN))
+  {
+    if (BSDOWN) {
+      LMGA = 0;
+      LMGB = 1;
+      LMGBRAKE = 1;
+      Serial.println("LMG down");
+    }
+
+    else if(!BSDOWN){
+      LMGA = 1;
+      LMGB = 1;
+      LMGBRAKE = 0;
+      Serial.println("down break");
+
+    }
+  }
+  else
+  {
+    LMGA = 1;
+    LMGB = 1;
+    LMGBRAKE = 0;
+    Serial.println("break");
+  }
+}
+
+
 void baseMotorsInitialize()
 {
   pwm0_init();
@@ -116,18 +153,18 @@ void baseMotorsMotion()
       sRight = 0 - map(stickRY, -127, 0 - joystickBuffer, pwm, 0);
     }
   }
-
-  Serial.print(stickLX);
-  Serial.print("\t");
-  Serial.print(stickRY);
-  Serial.print("\t");
-  Serial.print(sFront);
-  Serial.print("\t");
-  Serial.print(sBack);
-  Serial.print("\t");
-  Serial.print(sLeft);
-  Serial.print("\t");
-  Serial.println(sRight);
+//
+//  Serial.print(stickLX);
+//  Serial.print("\t");
+//  Serial.print(stickRY);
+//  Serial.print("\t");
+//  Serial.print(sFront);
+//  Serial.print("\t");
+//  Serial.print(sBack);
+//  Serial.print("\t");
+//  Serial.print(sLeft);
+//  Serial.print("\t");
+//  Serial.println(sRight);
   //  Serial.print("\t");
   //  Serial.print(PWMF);
   //  Serial.print("\t");
@@ -144,7 +181,7 @@ void baseMotorsMotion()
     MOTORFB = 1;
     if (sFront > 666)
       sFront = 666;
-//        PWMF = map(sFront, 0, 666, 0, 255);//max value of 8 bit timer is 255
+    //    PWMF = map(sFront, 0, 666, 0, 255);
     PWMF = sFront;
   }
   else if (sFront > 30)
@@ -154,7 +191,7 @@ void baseMotorsMotion()
     if (sFront > 666)
       sFront = 666;
     PWMF = sFront;
-//        PWMF = map(sFront, 0, 666, 0, 255);
+    //    PWMF = map(sFront, 0, 666, 0, 255);
   }
   else
   {
@@ -237,7 +274,7 @@ void baseMotorsMotion()
     PWMR = 666;
   }
 
-  if(psx_button_press(PSB_PAD_RIGHT)){
+if(psx_button_press(PSB_PAD_RIGHT)){
     MOTORFA=1;
     MOTORFB=0;
     PWMF=63;
@@ -279,6 +316,21 @@ void baseMotorsMotion()
   }
 }
 
+ISR(INT2_vect) {
+  LMGA = 1;
+  LMGB = 1;
+  LMGBRAKE = 0;
+  Serial.println("UP");
+  
+}
+
+ISR(INT3_vect) {
+  LMGA = 1;
+  LMGB = 1;
+  LMGBRAKE = 0;
+  Serial.println("DOWN");
+}
+
 void botKill() {
   LMGA = 1;
   LMGB = 1;
@@ -302,4 +354,5 @@ void botKill() {
 
 
 }
+
 
