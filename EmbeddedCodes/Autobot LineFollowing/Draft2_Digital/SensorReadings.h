@@ -15,6 +15,8 @@
 
 #define sideSensorThreshold 500
 
+#define threshold 500
+
 int leftFirst = 0;
 int leftSecond = 0;
 int rightFirst = 0;
@@ -79,15 +81,31 @@ void getSensorReadings()
   {
     PORTF &= ~(1 << frontSlaveSelect);
     readAdc(i);
-    sensorReadingsFront[i] = adcValue;
     PORTF |= (1 << frontSlaveSelect);
+    sensorReadingsFront[i] = adcValue;
+    if(sensorReadingsFront[i]<threshold)
+    {
+      sensorReadingsFront[i] = 0;  
+    }
+    else 
+    {
+      sensorReadingsFront[i] = 1;  
+    }
   }
   for(int i = 0; i < 8; i++)
   {
     PORTF &= ~(1 << backSlaveSelect);
     readAdc(i);
-    sensorReadingsBack[i] = adcValue;
     PORTF |= (1 << backSlaveSelect);
+    sensorReadingsBack[i] = adcValue;
+    if(sensorReadingsBack[i]<threshold)
+    {
+      sensorReadingsBack[i] = 0;  
+    }
+    else 
+    {
+      sensorReadingsBack[i] = 1;  
+    }
   }
 
   leftFirst = adc_start(0);
@@ -95,10 +113,10 @@ void getSensorReadings()
   rightFirst = adc_start(2);
   rightSecond = adc_start(3);
 
-  for(int i = 0; i < 8; i++)
-  {
-    map(sensorReadingsFront[i],250,3000,0,
-  }
+//  for(int i = 0; i < 8; i++)
+//  {
+//    map(sensorReadingsFront[i],250,3000,0,
+//  }
 }
 
 void assignWeightages(float w0, float w1, float w2, float w3, float w4, float w5, float w6, float w7)
@@ -129,6 +147,8 @@ void decideWeightages()
   }
 }
 
+void 
+
 void multiplyWeightagesToReadings()
 {
   for(int i = 0; i < 8; i++)
@@ -155,4 +175,3 @@ float getLinePosition()
 
   return (weightedSumFront / sumFront)*0.5 + (weightedSumBack / sumBack)*(-0.5);  //Sensors symmetric to center and opposite errors
 }
-

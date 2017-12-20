@@ -140,6 +140,19 @@ void multiplyWeightagesToReadings()
   } 
 }
 
+void mapEverythingToDarkGreen()
+{
+  for(int i=0;i<8;i++)
+  {
+    sensorReadings[i] = map(sensorReadings[i],600,2300,700,1300);  
+    //600 is min of all colors
+    //2300 is max of all colors except white
+    //700 is min of dark green
+    //1300 is max of dark green
+       
+  }
+}
+
 float getLinePosition()
 { 
   int sumFront, sumBack;

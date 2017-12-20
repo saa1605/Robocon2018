@@ -9,7 +9,6 @@
 #define joystickBuffer 35
 
 
-
 int sLeft, sRight, sFront, sBack;
 
 int pwm = 666;
@@ -20,6 +19,7 @@ void setup()
   DDRB |= 0b11110000;
   baseMotorsInitialize();
   LMGInitialize();
+  pistonInitialize();
   DDRD |= 1 << PD0;
   PORTD |= 1 << PD0;
 
@@ -31,6 +31,8 @@ void loop()
     psx_read_gamepad();
     baseMotorsMotion();
     LMGMotion();
+    pistonMotion();
+
   }
 
   else {
@@ -38,6 +40,13 @@ void loop()
     psx_init(&PORTG, 0, &PORTG, 3, &PORTG, 1, &PORTG, 2);
 
   }
+}
+
+void LMGInitialize() {
+  DDRD |= (1 << LMGA) | (1 << LMGB) | (1 << LMGBRAKE);
+  PORTD &= ~(1 << LMGA);
+  PORTD &= ~(1 << LMGB);
+  PORTD &= ~(1 << LMGBRAKE);
 }
 
 void LMGMotion()
@@ -63,12 +72,7 @@ void LMGMotion()
     LMGBRAKE = 0;
   }
 }
-void LMGInitialize(){
-  DDRD |= (1 << LMGA) | (1 << LMGB) | (1 << LMGBRAKE);
-  PORTD &= ~(1 << LMGA);
-  PORTD &= ~(1 << LMGB);
-  PORTD &= ~(1 << LMGBRAKE);
-}
+
 void baseMotorsInitialize()
 {
   pwm0_init();
@@ -86,7 +90,7 @@ void baseMotorsMotion()
 
   int stickLX = (psx_stick(PSS_LX)) - 127;
 
-  int stickRY =  127-(psx_stick(PSS_RY)) ;
+  int stickRY =  127 - (psx_stick(PSS_RY)) ;
 
 
   if (stickLX > joystickBuffer || stickLX < 0 - joystickBuffer)
@@ -144,7 +148,7 @@ void baseMotorsMotion()
     MOTORFB = 1;
     if (sFront > 666)
       sFront = 666;
-//        PWMF = map(sFront, 0, 666, 0, 255);//max value of 8 bit timer is 255
+    //    PWMF = map(sFront, 0, 666, 0, 255);
     PWMF = sFront;
   }
   else if (sFront > 30)
@@ -154,7 +158,7 @@ void baseMotorsMotion()
     if (sFront > 666)
       sFront = 666;
     PWMF = sFront;
-//        PWMF = map(sFront, 0, 666, 0, 255);
+    //    PWMF = map(sFront, 0, 666, 0, 255);
   }
   else
   {
@@ -237,7 +241,7 @@ void baseMotorsMotion()
     PWMR = 666;
   }
 
-  if(psx_button_press(PSB_PAD_RIGHT)){
+if(psx_button_press(PSB_PAD_RIGHT)){
     MOTORFA=1;
     MOTORFB=0;
     PWMF=63;
@@ -299,7 +303,41 @@ void botKill() {
   MOTORRA = 1;
   MOTORRB = 1;
   PWMR = 666;
+}
+
+void pistonInitialize() {
+  DDRE |= (1 << PISTON1A) | (1 << PISTON1B);
+  PORTE &= ~(1 << PISTON1A);
+  PORTE &= ~(1 << PISTON1B);
+
+  DDRB |= (1 << PISTON2A) | (1 << PISTON2B);
+  PORTB &= ~(1 << PISTON2A);
+  PORTB &= ~(1 << PISTON2B);
+}
+
+void pistonMotion() {
+  if (psx_button_press(PSB_CIRCLE)) {
+    PISTON1A = 1;
+    PISTON1B = 0;
+    Serial.println("Piston1 out");
+  }
+  else if (psx_button_press(PSB_SQUARE)) {
+    PISTON1A = 0;
+    PISTON1B = 0;
+    Serial.println("Piston1 in");
+  }
 
 
+  if (psx_button_press(PSB_CROSS)) {
+    PISTON2A = 1;
+    PISTON2B = 0;
+    Serial.println("Piston2 out");
+  }
+  else if (psx_button_press(PSB_TRIANGLE)) {
+  PISTON2A = 0;
+  PISTON2B = 0;
+  Serial.println("Piston2 in");
+
+  }
 }
 
