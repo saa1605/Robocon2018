@@ -10,11 +10,24 @@
 #define SCLK PB1 
 #define SS PB0 
 
+#define frontSlaveSelect PF2
+#define backSlaveSelect PF3
+
+#define sideSensorThreshold 500
+
+int leftFirst = 0;
+int leftSecond = 0;
+int rightFirst = 0;
+int rightSecond = 0;
+
 uint8_t x = 0xFF;
 uint8_t LSBData;
 uint8_t MSBData;
 int16_t adcValue;
-int sensorReadings[8];
+int sensorReadingsFront[8];
+int sensorReadingsBack[8];
+
+int weightedSumFront = 0, weightedSumBack = 0; ///this must be global to be used in Draft2.ino
 
 float weightages[8];
 
@@ -64,10 +77,27 @@ void getSensorReadings()
 { 
   for(int i = 0; i < 8; i++)
   {
-    PORTF &= ~(1 << PF2);
+    PORTF &= ~(1 << frontSlaveSelect);
     readAdc(i);
-    sensorReadings[i] = adcValue;
-    PORTF |= (1 << PF2);
+    sensorReadingsFront[i] = adcValue;
+    PORTF |= (1 << frontSlaveSelect);
+  }
+  for(int i = 0; i < 8; i++)
+  {
+    PORTF &= ~(1 << backSlaveSelect);
+    readAdc(i);
+    sensorReadingsBack[i] = adcValue;
+    PORTF |= (1 << backSlaveSelect);
+  }
+
+  leftFirst = adc_start(0);
+  leftSecond = adc_start(1);
+  rightFirst = adc_start(2);
+  rightSecond = adc_start(3);
+
+  for(int i = 0; i < 8; i++)
+  {
+    map(sensorReadingsFront[i],250,3000,0,
   }
 }
 
@@ -81,6 +111,10 @@ void assignWeightages(float w0, float w1, float w2, float w3, float w4, float w5
   weightages[5] = w5;
   weightages[6] = w6;
   weightages[7] = w7;
+//  leftFirst *= 1;
+//  leftSecond *= -1;
+//  rightFirst *= 1;
+//  rightSecond *= -1;
 }
 
 void decideWeightages()
@@ -99,7 +133,8 @@ void multiplyWeightagesToReadings()
 {
   for(int i = 0; i < 8; i++)
   {
-    sensorReadings[i] *= weightages[i];
+    sensorReadingsFront[i] *= weightages[i];
+    sensorReadingsBack[i] *= weightages[i];
   } 
 }
 
@@ -108,13 +143,16 @@ float getLinePosition()
   getSensorReadings();
   for(int i = 0; i < 8; i++)
   {
-    sum += sensorReadings[i];     
+    sumFront += sensorReadingsFront[i];
+    sumBack += sensorReadingsBack[i];
   }
   multiplyWeightagesToReadings();
   for(int i = 0; i < 8; i++)
   {
-    weightedSum += sensorReadings[i];     
+    weightedSumFront += sensorReadingsFront[i];
+    weightedSumBack += sensorReadingsBack[i];
   }
 
-  return weightedSum / sum;    
+  return (weightedSumFront / sumFront)*0.5 + (weightedSumBack / sumBack)*(-0.5);  //Sensors symmetric to center and opposite errors
 }
+
