@@ -15,10 +15,8 @@
 
 #define sideSensorThreshold 500
 
- int leftFirst = 0;
- int leftSecond = 0;
- int rightFirst = 0;
- int rightSecond = 0;
+int leftFirst = 0, leftSecond = 0, leftThird = 0, leftFourth = 0;
+int rightFirst = 0, rightSecond = 0, rightThird = 0, rightFourth = 0;
 
 // uint8_t x = 0xFF;
 // uint8_t LSBData;
@@ -98,8 +96,12 @@ void getSensorReadings()
 
   leftFirst = adc_start(0);
   leftSecond = adc_start(1);
-  rightFirst = adc_start(2);
-  rightSecond = adc_start(3);
+  leftThird = adc_start(2);
+  leftFourth = adc_start(3);
+  rightFirst = adc_start(4);
+  rightSecond = adc_start(5);
+  rightThird = adc_start(6);
+  rightFourth = adc_start(7);
 }
 
 void assignWeightages(float w0, float w1, float w2, float w3, float w4, float w5, float w6, float w7)
@@ -122,11 +124,24 @@ void selectWeightages()
 {
   if(!isSmooth)
   {
-     assignWeightages(-7, -5, -3, -1, 1, 3, 5, 7);
+    assignWeightages(-7, -5, -3, -1, 1, 3, 5, 7);
   }  
   else
   {
-     assignWeightages(-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5);
+    assignWeightages(-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5);
+  }
+}
+
+void mapEverythingToDarkGreen()
+{
+  for(int i =0; i < 8; i++)
+  {
+    sensorReadingsFront[i] = map(sensorReadingsFront[i], 600, 2300, 700, 1300);
+    sensorReadingsBack[i] = map(sensorReadingsBack[i], 600, 2300, 700, 1300);
+    //600 is min of all colors
+    //2300 is max of all colors except white
+    //700 is min of dark green
+    //1300 is max of dark green
   }
 }
 
@@ -144,6 +159,7 @@ float getLinePosition()
 { 
   int sumFront, sumBack;
   getSensorReadings();
+  mapEverythingToDarkGreen();
   for(int i = 0; i < 8; i++)
   {
     sumFront += sensorReadingsFront[i];
@@ -155,5 +171,6 @@ float getLinePosition()
     weightedSumFront += sensorReadingsFront[i];
     weightedSumBack += sensorReadingsBack[i];
   }
+
   return (weightedSumFront / sumFront)*0.5 + (weightedSumBack / sumBack)*(-0.5);  //Sensors symmetric to center and opposite errors
 }
