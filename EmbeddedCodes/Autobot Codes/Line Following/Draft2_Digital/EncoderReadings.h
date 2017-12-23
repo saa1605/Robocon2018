@@ -10,10 +10,10 @@
 //#define SCLK PB1 
 //#define SS PB0
 
-//int16_t convertEncoderBit()
-//{
-//  return MSBData<<8 | LSBData;
-//}
+// int16_t convertEncoderBit()
+// {
+//   return MSBData<<8 | LSBData;
+// }
 
 int16_t getEncoderReadings1()
 {
@@ -21,11 +21,11 @@ int16_t getEncoderReadings1()
   uint8_t LSBData;
   uint8_t MSBData;
 
-  PORTD &= ~ (1<<PD6);
+  PORTD &= ~ (1 << PD6);
   MSBData = spiTransfer(x);
   LSBData = spiTransfer(x);
-  PORTD |= (1<<PD6);
-//  return convertEncoderBit();
+  PORTD |= (1 << PD6);
+  // return convertEncoderBit();
   return (MSBData << 8 | LSBData);
 }
 
@@ -35,11 +35,11 @@ int16_t getEncoderReadings2()
   uint8_t LSBData;
   uint8_t MSBData;
 
-  PORTD &= ~ (1<<PD7);
+  PORTD &= ~ (1 << PD7);
   MSBData = spiTransfer(x);
   LSBData = spiTransfer(x);
-  PORTD |= (1<<PD7);
-//  return convertEncoderBit();
+  PORTD |= (1 << PD7);
+  // return convertEncoderBit();
   return (MSBData << 8 | LSBData);
 }
 

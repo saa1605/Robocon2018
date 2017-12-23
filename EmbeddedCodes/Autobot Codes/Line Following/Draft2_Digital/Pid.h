@@ -21,10 +21,10 @@
 float lineError = 0, lineDiff = 0, lineIntegral = 0, linePid = 0, prevLineError = 0;
 float encoderError = 0, encoderDiff = 0, encoderIntegral = 0, encoderPid = 0, prevEncoderError = 0;
 
-float linePos = getLinePosition();
-float encoderPos = getEncoderPosition();
+// float linePos = getLinePosition();
+// float encoderPos = getEncoderPosition();
 
-void calcLinePid()
+void calcLinePid(float linePos)
 {
   lineError = linePos;
   lineDiff = lineError - prevLineError;
@@ -37,7 +37,7 @@ void calcLinePid()
   prevLineError = lineError;
 }
 
-void calcEncoderPid()
+void calcEncoderPid(float encoderPos)
 {
   encoderError = encoderPos;
   encoderDiff = encoderError - prevEncoderError;
@@ -52,8 +52,10 @@ void calcEncoderPid()
 
 float getPidError()
 {
-  calcLinePid();
-  calcEncoderPid();
+  float linePos = getLinePosition();
+  float encoderPos = getEncoderPosition();
+  calcLinePid(linePos);
+  calcEncoderPid(encoderPos);
   if(isSmooth)
   {
     return (smoothLineWeight*linePid + smoothEncoderWeight*encoderPid); 
