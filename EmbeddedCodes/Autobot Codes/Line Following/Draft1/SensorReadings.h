@@ -88,10 +88,7 @@ void assignWeightages(float w0, float w1, float w2, float w3, float w4, float w5
   weightages[5] = w5;
   weightages[6] = w6;
   weightages[7] = w7;
-  for(int i = 0;i < 8; i++)
-  {
-    weightages[i]*=1000; 
-  }
+
 }
 
 
@@ -116,7 +113,7 @@ void multiplyWeightagesToReadings()
   } 
 }
 
-float get_line_position()
+float getPosition()
 { 
   getSensorReadings();
   for(int i=0;i<8;i++)

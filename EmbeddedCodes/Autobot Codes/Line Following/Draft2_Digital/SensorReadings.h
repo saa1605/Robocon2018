@@ -17,8 +17,17 @@
 #define mainSensorThreshold 1950   //1600 is max of red
 									//2300 is max of white
 
+<<<<<<< HEAD:EmbeddedCodes/Autobot LineFollowing/Draft2_Digital/SensorReadings.h
+#define threshold 500
+
+int leftFirst = 0;
+int leftSecond = 0;
+int rightFirst = 0;
+int rightSecond = 0;
+=======
 int leftFirst = 0, leftSecond = 0, leftThird = 0, leftFourth = 0;
 int rightFirst = 0, rightSecond = 0, rightThird = 0, rightFourth = 0;
+>>>>>>> abb598b1bfdec969e1ba3a8062d2955b80fba18e:EmbeddedCodes/Autobot Codes/Line Following/Draft2_Digital/SensorReadings.h
 
 // uint8_t x = 0xFF;
 // uint8_t LSBData;
@@ -84,26 +93,62 @@ void getSensorReadings()
   for(int i = 0; i < 8; i++)
   {
     PORTF &= ~(1 << frontSlaveSelect);
+<<<<<<< HEAD:EmbeddedCodes/Autobot LineFollowing/Draft2_Digital/SensorReadings.h
+    readAdc(i);
+=======
     // readAdc(i);
     sensorReadingsFront[i] = readAdc(i);
+>>>>>>> abb598b1bfdec969e1ba3a8062d2955b80fba18e:EmbeddedCodes/Autobot Codes/Line Following/Draft2_Digital/SensorReadings.h
     PORTF |= (1 << frontSlaveSelect);
+    sensorReadingsFront[i] = adcValue;
+    if(sensorReadingsFront[i]<threshold)
+    {
+      sensorReadingsFront[i] = 0;  
+    }
+    else 
+    {
+      sensorReadingsFront[i] = 1;  
+    }
   }
   for(int i = 0; i < 8; i++)
   {
     PORTF &= ~(1 << backSlaveSelect);
+<<<<<<< HEAD:EmbeddedCodes/Autobot LineFollowing/Draft2_Digital/SensorReadings.h
+    readAdc(i);
+=======
     // readAdc(i);
     sensorReadingsBack[i] = readAdc(i);
+>>>>>>> abb598b1bfdec969e1ba3a8062d2955b80fba18e:EmbeddedCodes/Autobot Codes/Line Following/Draft2_Digital/SensorReadings.h
     PORTF |= (1 << backSlaveSelect);
+    sensorReadingsBack[i] = adcValue;
+    if(sensorReadingsBack[i]<threshold)
+    {
+      sensorReadingsBack[i] = 0;  
+    }
+    else 
+    {
+      sensorReadingsBack[i] = 1;  
+    }
   }
 
   leftFirst = adc_start(0);
   leftSecond = adc_start(1);
+<<<<<<< HEAD:EmbeddedCodes/Autobot LineFollowing/Draft2_Digital/SensorReadings.h
+  rightFirst = adc_start(2);
+  rightSecond = adc_start(3);
+
+//  for(int i = 0; i < 8; i++)
+//  {
+//    map(sensorReadingsFront[i],250,3000,0,
+//  }
+=======
   leftThird = adc_start(2);
   leftFourth = adc_start(3);
   rightFirst = adc_start(4);
   rightSecond = adc_start(5);
   rightThird = adc_start(6);
   rightFourth = adc_start(7);
+>>>>>>> abb598b1bfdec969e1ba3a8062d2955b80fba18e:EmbeddedCodes/Autobot Codes/Line Following/Draft2_Digital/SensorReadings.h
 }
 
 void assignWeightages(float w0, float w1, float w2, float w3, float w4, float w5, float w6, float w7)
@@ -134,6 +179,9 @@ void selectWeightages()
   }
 }
 
+<<<<<<< HEAD:EmbeddedCodes/Autobot LineFollowing/Draft2_Digital/SensorReadings.h
+void 
+=======
 void digitaliseReadings()
 {
 	leftFirst = 0;
@@ -182,6 +230,7 @@ void digitaliseReadings()
 		}
 	}
 }
+>>>>>>> abb598b1bfdec969e1ba3a8062d2955b80fba18e:EmbeddedCodes/Autobot Codes/Line Following/Draft2_Digital/SensorReadings.h
 
 void multiplyWeightagesToReadings()
 {

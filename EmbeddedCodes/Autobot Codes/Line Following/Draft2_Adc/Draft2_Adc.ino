@@ -27,7 +27,7 @@ void setup()
   pwm1_init();
   DDRF |= 0xFF;
   PORTF |= 0xFF;
-  spiMasterInit();
+  spiMasterInit();      
 }
 
 void loop()
