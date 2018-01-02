@@ -11,6 +11,8 @@
 
 #define joystickBuffer 35
 
+int LX = 0, LY = 0, RX = 0, RY = 0;
+
 
 int sLeft, sRight, sFront, sBack;
 
@@ -37,19 +39,26 @@ void setup()
 }
 void loop()
 {
-  //    if (readController()) {
   psx_read_gamepad();
-  baseMotorsMotion();
-  LMGMotion();
-  pistonMotion();
-  //    }
+  if (LX = 128 && LY == (-128) && RX == 128 && RY == (-128)) {
+    LX = (psx_stick(PSS_LX)) - 127;
+    LY = 127 - (psx_stick(PSS_LY));
+    RX = (psx_stick(PSS_RX)) - 127;
+    RY =  127 - (psx_stick(PSS_RY)) ;
 
-  //   else {
-  //   Serial.println("Controller Disconnected");
-  //      botKill();
-  //      psx_init(&PORTG, 0, &PORTG, 3, &PORTG, 1, &PORTG, 2);
-  //
-  //  }
+
+    Serial.println("Controller Disconnected");
+    botKill();
+    psx_init(&PORTG, 0, &PORTG, 3, &PORTG, 1, &PORTG, 2);
+  }
+  else {
+
+
+
+    baseMotorsMotion();
+    LMGMotion();
+    pistonMotion();
+  }
 }
 
 void LMGInitialize() {
@@ -120,8 +129,15 @@ void baseMotorsMotion()
   sBack = 0;
 
   int stickLX = (psx_stick(PSS_LX)) - 127;
-
+  int stickLY = 127 - (psx_stick(PSS_LY));
+  int stickRX = (psx_stick(PSS_RX)) - 127;
   int stickRY =  127 - (psx_stick(PSS_RY)) ;
+
+  LX = stickLX;
+  LY = stickLY;
+  RX = stickRX;
+  RY = stickRY;
+
 
 
   if (stickLX > joystickBuffer || stickLX < 0 - joystickBuffer)
@@ -272,45 +288,45 @@ void baseMotorsMotion()
     PWMR = 666;
   }
 
-if(psx_button_press(PSB_PAD_RIGHT)){
-    MOTORFA=1;
-    MOTORFB=0;
-    PWMF=63;
+  if (psx_button_press(PSB_PAD_RIGHT)) {
+    MOTORFA = 1;
+    MOTORFB = 0;
+    PWMF = 63;
 
-    MOTORLA=1;
-    MOTORLB=0;
-    PWML=166;
+    MOTORLA = 1;
+    MOTORLB = 0;
+    PWML = 166;
 
-    MOTORBA=0;
-    MOTORBB=1;
-    PWMB=166;
+    MOTORBA = 0;
+    MOTORBB = 1;
+    PWMB = 166;
 
-    MOTORRA=0;
-    MOTORRB=1;
-    PWMR=166;
+    MOTORRA = 0;
+    MOTORRB = 1;
+    PWMR = 166;
 
     Serial.println("Spot right");
   }
 
-  if(psx_button_press(PSB_PAD_LEFT)){
-    MOTORFA=0;
-    MOTORFB=1;
-    PWMF=63;//HALF PWM FOR SLOW SPOT TURN
+  if (psx_button_press(PSB_PAD_LEFT)) {
+    MOTORFA = 0;
+    MOTORFB = 1;
+    PWMF = 63; //HALF PWM FOR SLOW SPOT TURN
 
-    MOTORLA=0;
-    MOTORLB=1;
-    PWML=166;
+    MOTORLA = 0;
+    MOTORLB = 1;
+    PWML = 166;
 
-    MOTORBA=1;
-    MOTORBB=0;
-    PWMB=166;
+    MOTORBA = 1;
+    MOTORBB = 0;
+    PWMB = 166;
 
-    MOTORRA=1;
-    MOTORRB=0;
-    PWMR=166;    
+    MOTORRA = 1;
+    MOTORRB = 0;
+    PWMR = 166;
 
     Serial.println("Spot right");
-    
+
   }
 }
 
@@ -381,9 +397,9 @@ void pistonMotion() {
     Serial.println("Piston2 out");
   }
   else if (psx_button_press(PSB_TRIANGLE)) {
-  PISTON2A = 0;
-  PISTON2B = 0;
-  Serial.println("Piston2 in");
+    PISTON2A = 0;
+    PISTON2B = 0;
+    Serial.println("Piston2 in");
 
   }
 }
