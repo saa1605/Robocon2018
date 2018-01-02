@@ -12,6 +12,8 @@
 
 #define opt 0
 
+int LX = 0, LY = 0, RX = 0, RY = 0;
+
 float pidError = 0;
 
 float lowerPWMConstrain = 0;
@@ -34,9 +36,21 @@ void setup()
 void loop()
 {
   psx_read_gamepad();
-  pidError = getPidError();
+  if (LX = 128 && LY == (-128) && RX == 128 && RY == (-128))
+  {
+    LX = (psx_stick(PSS_LX)) - 127;
+    LY = 127 - (psx_stick(PSS_LY));
+    RX = (psx_stick(PSS_RX)) - 127;
+    RY =  127 - (psx_stick(PSS_RY)) ;
 
-  printData();
+    Serial.println("Controller Disconnected");
+    botKill();
+    psx_init(&PORTG, 0, &PORTG, 3, &PORTG, 1, &PORTG, 2);
+  }
+  
+  pidError = getPidError();
+  baseMotorsMotion();
+//  printData();
 }
 
 void baseMotorsInitialize()
@@ -48,64 +62,52 @@ void baseMotorsInitialize()
 
 void baseMotorsMotion()
 {
-  //  int stickLX = (psx_stick(PSS_LX)) - 127;
-  //  int stickRY =  127 - (psx_stick(PSS_RY)) ;
-  //
-  //  if (stickLX > joystickBuffer || stickLX < 0 - joystickBuffer)
-  //  {
-  //    if (stickLX > 0)
-  //    {
-  //      sFront = map(stickLX, joystickBuffer, 127, 0, pwm);
-  //      sBack = map(stickLX, joystickBuffer, 127, 0, pwm);
-  //    }
-  //    else if (stickLX < 0)
-  //    {
-  //      sFront = 0 - map(stickLX, -127, 0 - joystickBuffer, pwm, 0);
-  //      sBack = 0 - map(stickLX, -127, 0 - joystickBuffer, pwm, 0);
-  //    }
-  //  }
-  //
-  //  else if (stickRY > joystickBuffer || stickRY < 0 - joystickBuffer)
-  //  {
-  //    if (stickRY > 0)
-  //    {
-  //      sLeft = map(stickRY, joystickBuffer, 127, 0, pwm);
-  //      sRight = map(stickRY, joystickBuffer, 127, 0, pwm);
-  //    }
-  //    else if (stickRY < 0)
-  //    {
-  //      sLeft = 0 - map(stickRY, -127, 0 - joystickBuffer, pwm, 0);
-  //      sRight = 0 - map(stickRY, -127, 0 - joystickBuffer, pwm, 0);
-  //    }
-  //  }
+  LX = (psx_stick(PSS_LX)) - 127;
+  LY = 127 - (psx_stick(PSS_LY));
+  RX = (psx_stick(PSS_RX)) - 127;
+  RY =  127 - (psx_stick(PSS_RY)) ;
+  
+//    if (LX > joystickBuffer || LX < 0 - joystickBuffer)
+//    {
+//      if (LX > 0)
+//      {
+//        sFront = map(LX, joystickBuffer, 127, 0, pwm);
+//        sBack = map(LX, joystickBuffer, 127, 0, pwm);
+//      }
+//      else if (LX < 0)
+//      {
+//        sFront = 0 - map(LX, -127, 0 - joystickBuffer, pwm, 0);
+//        sBack = 0 - map(X, -127, 0 - joystickBuffer, pwm, 0);
+//      }
+//    }
+//  
+//    else if (RY > joystickBuffer || RY < 0 - joystickBuffer)
+//    {
+//      if (RY > 0)
+//      {
+//        sLeft = map(RY, joystickBuffer, 127, 0, pwm);
+//        sRight = map(RY, joystickBuffer, 127, 0, pwm);
+//      }
+//      else if (RY < 0)
+//      {
+//        sLeft = 0 - map(RY, -127, 0 - joystickBuffer, pwm, 0);
+//        sRight = 0 - map(RY, -127, 0 - joystickBuffer, pwm, 0);
+//      }
+//    }
 
-  //  if(pidError > 0)
-  //    bot_left();
-  //  else if(pidError < 0)
-  //    bot_right();
-  //  else
-  //    bot_brake();
+    if(pidError > 0)
+      botLeft();
+    else if(pidError < 0)
+      botRight();
+    else
+      botBrake();
 
   PWML = constrain(opt + pidError, lowerPWMConstrain, higherPWMConstrain);
   PWMR = constrain(opt - pidError, lowerPWMConstrain, higherPWMConstrain);
 
   if (psx_button_press(PSB_CROSS))
   {
-    MOTORFA = 1;
-    MOTORFB = 1;
-    PWMF = 0;
-
-    MOTORLA = 1;
-    MOTORLB = 1;
-    PWML = 0;
-
-    MOTORBA = 1;
-    MOTORBB = 1;
-    PWMB = 0;
-
-    MOTORRA = 1;
-    MOTORRB = 1;
-    PWMR = 0;
+    botKill();
     Serial.println("Bot Brake");
   }
 
@@ -151,6 +153,70 @@ void baseMotorsMotion()
     pidMode = 3;
     while (psx_button_press(PSB_CIRCLE));
   }
+}
+
+void botKill()
+{
+  MOTORFA = 1;
+  MOTORFB = 1;
+  PWMF = 666;
+
+  MOTORBA = 1;
+  MOTORBB = 1;
+  PWMB = 666;
+
+  MOTORLA = 1;
+  MOTORLB = 1;
+  PWML = 666;
+
+  MOTORRA = 1;
+  MOTORRB = 1;
+  PWMR = 666;
+}
+
+void botLeft()
+{
+  MOTORLA = 1;
+  MOTORLB = 0;
+
+  MOTORRA = 1;
+  MOTORRB = 0;
+
+  MOTORFA = 0;
+  MOTORFB = 0;
+
+  MOTORBA = 0;
+  MOTORBB = 0;
+}
+
+void botRight()
+{
+  MOTORLA = 1;
+  MOTORLB = 0;
+
+  MOTORRA = 1;
+  MOTORRB = 0;
+
+  MOTORFA = 0;
+  MOTORFB = 0;
+
+  MOTORBA = 0;
+  MOTORBB = 0;
+}
+
+void botBrake()
+{
+  MOTORLA = 1;
+  MOTORLB = 1;
+
+  MOTORRA = 1;
+  MOTORRB = 1;
+
+  MOTORFA = 0;
+  MOTORFB = 0;
+
+  MOTORBA = 0;
+  MOTORBB = 0;
 }
 
 void printData()

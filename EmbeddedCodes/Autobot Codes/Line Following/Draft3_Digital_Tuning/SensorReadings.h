@@ -15,8 +15,7 @@
 
 #define sideSensorThreshold 500
 #define mainSensorThreshold 1950   //1600 is max of red
-									//2300 is max of white
-#define threshold 500
+									                 //2300 is max of white
 
 int leftFirst = 0, leftSecond = 0, leftThird = 0, leftFourth = 0;
 int rightFirst = 0, rightSecond = 0, rightThird = 0, rightFourth = 0;
@@ -87,22 +86,13 @@ void getSensorReadings()
     PORTF &= ~(1 << frontSlaveSelect);
     sensorReadingsFront[i] = readAdc(i);
     PORTF |= (1 << frontSlaveSelect);
-    sensorReadingsFront[i] = readAdc(i);
-    if(sensorReadingsFront[i] < threshold)
-      sensorReadingsFront[i] = 0;  
-    else 
-      sensorReadingsFront[i] = 1;  
   }
+  
   for(int i = 0; i < 8; i++)
   {
     PORTF &= ~(1 << backSlaveSelect);
     sensorReadingsBack[i] = readAdc(i);
     PORTF |= (1 << backSlaveSelect);
-    sensorReadingsBack[i] = readAdc(i);
-    if(sensorReadingsBack[i]<threshold)
-      sensorReadingsBack[i] = 0;
-    else 
-      sensorReadingsBack[i] = 1;
   }
 
   leftFirst = adc_start(0);
