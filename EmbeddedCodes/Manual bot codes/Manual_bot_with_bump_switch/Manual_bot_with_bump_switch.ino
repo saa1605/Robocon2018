@@ -5,12 +5,15 @@
 
 #include"avr/io.h"
 #include"avr/interrupt.h"
+\
+int LX = 0, LY = 0, RX = 0, RY = 0;
 
 #include <psx.h>
 #include <psx2.h>
 
 #define joystickBuffer 35
 
+int flag = 0;
 
 int sLeft, sRight, sFront, sBack;
 
@@ -36,25 +39,28 @@ void setup()
 }
 void loop()
 {
-//  if (readController()) {
   psx_read_gamepad();
-  baseMotorsMotion();
-  LMGMotion();
-//  }
 
-//  else {
-//    Serial.println("Controller Disconnected");
-//    botKill();
-////    psx_init(&PORTG, 0, &PORTG, 3, &PORTG, 1, &PORTG, 2);
-//  }  
-//
-//  if(!readController()){
-//    botKill();
-//    psx_init(&PORTG, 0, &PORTG, 3, &PORTG, 1, &PORTG, 2);
-//  }
+  if (LX = 128 && LY == (-128) && RX == 128 && RY == (-128)) {
+    LX = (psx_stick(PSS_LX)) - 127;
+    LY = 127 - (psx_stick(PSS_LY));
+    RX = (psx_stick(PSS_RX)) - 127;
+    RY =  127 - (psx_stick(PSS_RY)) ;
+
+
+    Serial.println("Controller Disconnected");
+    botKill();
+    psx_init(&PORTG, 0, &PORTG, 3, &PORTG, 1, &PORTG, 2);
+  }
+
+  else {
+    baseMotorsMotion();
+    LMGMotion();
+  }
+
 }
 
-void LMGInitialize(){
+void LMGInitialize() {
   DDRD |= (1 << LMGA) | (1 << LMGB) | (1 << LMGBRAKE);
   PORTD &= ~(1 << LMGA);
   PORTD &= ~(1 << LMGB);
@@ -71,12 +77,12 @@ void LMGMotion()
       LMGBRAKE = 1;
       Serial.println("Lmg up");
     }
-    else if(!BSUP){
+    else if (!BSUP) {
       LMGA = 1;
       LMGB = 1;
       LMGBRAKE = 0;
       Serial.println("up break");
-      
+
     }
   }
   else if (psx_button_press(PSB_PAD_DOWN))
@@ -88,7 +94,7 @@ void LMGMotion()
       Serial.println("LMG down");
     }
 
-    else if(!BSDOWN){
+    else if (!BSDOWN) {
       LMGA = 1;
       LMGB = 1;
       LMGBRAKE = 0;
@@ -101,7 +107,7 @@ void LMGMotion()
     LMGA = 1;
     LMGB = 1;
     LMGBRAKE = 0;
-    Serial.println("break");
+    //    Serial.println("break");
   }
 }
 
@@ -122,8 +128,14 @@ void baseMotorsMotion()
   sBack = 0;
 
   int stickLX = (psx_stick(PSS_LX)) - 127;
+  int stickLY = 127 - (psx_stick(PSS_LY));
+  int stickRX = (psx_stick(PSS_RX)) - 127;
+  int stickRY =  127 - (psx_stick(PSS_RY)) ;
 
-  int stickRY =  127-(psx_stick(PSS_RY)) ;
+  LX = stickLX;
+  LY = stickLY;
+  RX = stickRX;
+  RY = stickRY;
 
 
   if (stickLX > joystickBuffer || stickLX < 0 - joystickBuffer)
@@ -153,18 +165,22 @@ void baseMotorsMotion()
       sRight = 0 - map(stickRY, -127, 0 - joystickBuffer, pwm, 0);
     }
   }
-//
-//  Serial.print(stickLX);
-//  Serial.print("\t");
-//  Serial.print(stickRY);
-//  Serial.print("\t");
-//  Serial.print(sFront);
-//  Serial.print("\t");
-//  Serial.print(sBack);
-//  Serial.print("\t");
-//  Serial.print(sLeft);
-//  Serial.print("\t");
-//  Serial.println(sRight);
+  //
+  Serial.print(stickLX);
+  Serial.print("\t");
+  Serial.print(stickLY);
+  Serial.print("\t");
+  Serial.print(stickRX);
+  Serial.print("\t");
+  Serial.print(stickRY);
+  Serial.println("\t");
+  //  Serial.print(sFront);
+  //  Serial.print("\t");
+  //  Serial.print(sBack);
+  //  Serial.print("\t");
+  //  Serial.print(sLeft);
+  //  Serial.print("\t");
+  //  Serial.println(sRight);
   //  Serial.print("\t");
   //  Serial.print(PWMF);
   //  Serial.print("\t");
@@ -274,45 +290,45 @@ void baseMotorsMotion()
     PWMR = 666;
   }
 
-if(psx_button_press(PSB_PAD_RIGHT)){
-    MOTORFA=1;
-    MOTORFB=0;
-    PWMF=63;
+  if (psx_button_press(PSB_PAD_RIGHT)) {
+    MOTORFA = 1;
+    MOTORFB = 0;
+    PWMF = 63;
 
-    MOTORLA=1;
-    MOTORLB=0;
-    PWML=166;
+    MOTORLA = 1;
+    MOTORLB = 0;
+    PWML = 166;
 
-    MOTORBA=0;
-    MOTORBB=1;
-    PWMB=166;
+    MOTORBA = 0;
+    MOTORBB = 1;
+    PWMB = 166;
 
-    MOTORRA=0;
-    MOTORRB=1;
-    PWMR=166;
+    MOTORRA = 0;
+    MOTORRB = 1;
+    PWMR = 166;
 
     Serial.println("Spot right");
   }
 
-  if(psx_button_press(PSB_PAD_LEFT)){
-    MOTORFA=0;
-    MOTORFB=1;
-    PWMF=63;//HALF PWM FOR SLOW SPOT TURN
+  if (psx_button_press(PSB_PAD_LEFT)) {
+    MOTORFA = 0;
+    MOTORFB = 1;
+    PWMF = 63; //HALF PWM FOR SLOW SPOT TURN
 
-    MOTORLA=0;
-    MOTORLB=1;
-    PWML=166;
+    MOTORLA = 0;
+    MOTORLB = 1;
+    PWML = 166;
 
-    MOTORBA=1;
-    MOTORBB=0;
-    PWMB=166;
+    MOTORBA = 1;
+    MOTORBB = 0;
+    PWMB = 166;
 
-    MOTORRA=1;
-    MOTORRB=0;
-    PWMR=166;    
+    MOTORRA = 1;
+    MOTORRB = 0;
+    PWMR = 166;
 
     Serial.println("Spot right");
-    
+
   }
 }
 
@@ -321,7 +337,7 @@ ISR(INT2_vect) {
   LMGB = 1;
   LMGBRAKE = 0;
   Serial.println("UP");
-  
+
 }
 
 ISR(INT3_vect) {

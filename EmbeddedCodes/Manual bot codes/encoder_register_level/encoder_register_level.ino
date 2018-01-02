@@ -6,7 +6,11 @@
 int main()
 {
 
+<<<<<<< HEAD
   DDRD=0b00000110;
+=======
+  DDRD=0x00;
+>>>>>>> 3b6ab28f5d6b8dc1fc057e31e2e7a70c52fd19df
   Serial.begin(115200);
   PORTD |= (1<<PD2)|(1<<PD3);
   MCUCR = 0x11;
