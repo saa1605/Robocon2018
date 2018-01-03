@@ -5,7 +5,7 @@
 
 #include"avr/io.h"
 #include"avr/interrupt.h"
-\
+
 int LX = 0, LY = 0, RX = 0, RY = 0;
 
 #include <psx.h>
