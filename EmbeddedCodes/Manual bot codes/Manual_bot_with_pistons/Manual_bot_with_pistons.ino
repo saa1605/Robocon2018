@@ -24,22 +24,23 @@ void setup()
   PORTD |= 1 << PD0;
 
   Serial.begin(9600);
+  Serial.println("Setup Complete");
 }
 void loop()
 {
-  if (readController()) {
+//  if (readController()) {
     psx_read_gamepad();
     baseMotorsMotion();
     LMGMotion();
     pistonMotion();
 
-  }
-
-  else {
-    botKill();
-    psx_init(&PORTG, 0, &PORTG, 3, &PORTG, 1, &PORTG, 2);
-
-  }
+//  }
+//
+//  else {
+//    botKill();
+//    psx_init(&PORTG, 0, &PORTG, 3, &PORTG, 1, &PORTG, 2);
+//
+//  }
 }
 
 void LMGInitialize() {
@@ -121,17 +122,17 @@ void baseMotorsMotion()
     }
   }
 
-  Serial.print(stickLX);
-  Serial.print("\t");
-  Serial.print(stickRY);
-  Serial.print("\t");
-  Serial.print(sFront);
-  Serial.print("\t");
-  Serial.print(sBack);
-  Serial.print("\t");
-  Serial.print(sLeft);
-  Serial.print("\t");
-  Serial.println(sRight);
+//  Serial.print(stickLX);
+//  Serial.print("\t");
+//  Serial.print(stickRY);
+//  Serial.print("\t");
+//  Serial.print(sFront);
+//  Serial.print("\t");
+//  Serial.print(sBack);
+//  Serial.print("\t");
+//  Serial.print(sLeft);
+//  Serial.print("\t");
+//  Serial.println(sRight);
   //  Serial.print("\t");
   //  Serial.print(PWMF);
   //  Serial.print("\t");
