@@ -1,3 +1,13 @@
+//#define MOSI PB2
+//#define MISO PB3 
+//#define SCLK PB1 
+//#define SS PB0
+
+uint8_t x = 0xFF;
+uint8_t LSBData;
+uint8_t MSBData;
+int16_t adcValue;
+
 #include "SensorReadings.h"
 #include "EncoderReadings.h"
 
@@ -65,7 +75,7 @@ float getPidError()
   calcEncoderPid(encoderPos);
   if(isSmooth)
   {
-    return (smoothLineWeight*linePid + smoothEncoderWeight*encoderPid); 
+    return (smoothLineWeight*linePid + smoothEncoderWeight*encoderPid);
   }
   else
   {

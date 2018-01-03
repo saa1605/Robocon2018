@@ -1,29 +1,12 @@
-#include <io128.h>
-#include <sra128.h>
-
-#include<avr/io.h>
-#include<util/delay.h>
-#include<avr/interrupt.h>
-
-#define MOSI PB2
-#define MISO PB3 
-#define SCLK PB1 
-#define SS PB0 
-
-#define frontSlaveSelect PF2
-#define backSlaveSelect PF3
+//#define frontSlaveSelect PF2
+//#define backSlaveSelect PF3
 
 #define sideSensorThreshold 500
-#define mainSensorThreshold 1950   //1600 is max of red
-									                 //2300 is max of white
+#define mainSensorThreshold 1500   
 
 int leftFirst = 0, leftSecond = 0, leftThird = 0, leftFourth = 0;
 int rightFirst = 0, rightSecond = 0, rightThird = 0, rightFourth = 0;
 
-// uint8_t x = 0xFF;
-// uint8_t LSBData;
-// uint8_t MSBData;
-// int16_t adcValue;
 int sensorReadingsFront[8];
 int sensorReadingsBack[8];
 
@@ -51,18 +34,14 @@ unsigned char spiTransfer(unsigned char data)
   return(SPDR); 
 }
 
-// void convertBit(void)
-// {
-//   MSBData = MSBData & 0b00001111;
-//   adcValue = (MSBData << 8) | LSBData;
-// }
-
-uint16_t readAdc(int channel)
+void convertBit(void)
 {
-  uint8_t x = 0xFF;
-  uint8_t LSBData;
-  uint8_t MSBData;
+  MSBData = MSBData & 0b00001111;
+  adcValue = (MSBData << 8) | LSBData;
+}
 
+void readAdc(int channel)
+{
   byte channelbit = channel<<6;
   if(channel < 4)
   {
@@ -74,9 +53,7 @@ uint16_t readAdc(int channel)
   }
   MSBData = spiTransfer(channelbit);
   LSBData = spiTransfer(x);
-  // convertBit();  
-  MSBData = MSBData & 0b00001111;
-  return (MSBData << 8 | LSBData);
+  convertBit();
 }
 
 void getSensorReadings()
@@ -84,25 +61,27 @@ void getSensorReadings()
   for(int i = 0; i < 8; i++)
   {
     PORTF &= ~(1 << frontSlaveSelect);
-    sensorReadingsFront[i] = readAdc(i);
+    readAdc(i);
+    sensorReadingsFront[i] = adcValue;
     PORTF |= (1 << frontSlaveSelect);
   }
   
   for(int i = 0; i < 8; i++)
   {
     PORTF &= ~(1 << backSlaveSelect);
-    sensorReadingsBack[i] = readAdc(i);
+    readAdc(i);
+    sensorReadingsBack[i] = adcValue;
     PORTF |= (1 << backSlaveSelect);
   }
 
-  leftFirst = adc_start(0);
-  leftSecond = adc_start(1);
-  leftThird = adc_start(2);
-  leftFourth = adc_start(3);
-  rightFirst = adc_start(4);
-  rightSecond = adc_start(5);
-  rightThird = adc_start(6);
-  rightFourth = adc_start(7);
+//  leftFirst = adc_start(0);
+//  leftSecond = adc_start(1);
+//  leftThird = adc_start(2);
+//  leftFourth = adc_start(3);
+//  rightFirst = adc_start(4);
+//  rightSecond = adc_start(5);
+//  rightThird = adc_start(6);
+//  rightFourth = adc_start(7);
 }
 
 void assignWeightages(float w0, float w1, float w2, float w3, float w4, float w5, float w6, float w7)
@@ -135,14 +114,14 @@ void selectWeightages()
 
 void digitaliseReadings()
 {
-	leftFirst = 0;
-	leftSecond = 0;
-	leftThird = 0;
-	leftFourth = 0;
-	rightFirst = 0;
-	rightSecond = 0;
-	rightThird = 0;
-	rightFourth = 0;
+//	leftFirst = 0;
+//	leftSecond = 0;
+//	leftThird = 0;
+//	leftFourth = 0;
+//	rightFirst = 0;
+//	rightSecond = 0;
+//	rightThird = 0;
+//	rightFourth = 0;
 
 	for(int i =0; i < 8; i++)
 	{
@@ -164,21 +143,21 @@ void digitaliseReadings()
 			sensorReadingsBack[i] = 1;
 		}
 
-		if(adc_start(i) > sideSensorThreshold)
-		{
-			switch(i)
-			{
-				case 0: leftFirst = 1; break;
-				case 1: leftSecond = 1; break;
-				case 2: leftThird = 1; break;
-				case 3: leftFourth = 1; break;
-				case 4: rightFirst = 1; break;
-				case 5: rightSecond = 1; break;
-				case 6: rightThird = 1; break;
-				case 7: rightFourth = 1; break;
-				default:break;
-			}
-		}
+//		if(adc_start(i) > sideSensorThreshold)
+//		{
+//			switch(i)
+//			{
+//				case 0: leftFirst = 1; break;
+//				case 1: leftSecond = 1; break;
+//				case 2: leftThird = 1; break;
+//				case 3: leftFourth = 1; break;
+//				case 4: rightFirst = 1; break;
+//				case 5: rightSecond = 1; break;
+//				case 6: rightThird = 1; break;
+//				case 7: rightFourth = 1; break;
+//				default:break;
+//			}
+//		}   
 	}
 }
 
@@ -202,7 +181,7 @@ float getLinePosition()
     sumFront += sensorReadingsFront[i];
     sumBack += sensorReadingsBack[i];
   }
-  multiplyWeightagesToReadings();
+//  multiplyWeightagesToReadings();
   for(int i = 0; i < 8; i++)
   {
     weightedSumFront += sensorReadingsFront[i];

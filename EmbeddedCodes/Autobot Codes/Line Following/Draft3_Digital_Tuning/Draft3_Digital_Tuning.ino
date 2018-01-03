@@ -1,7 +1,11 @@
-#include <pinDefsManual.h>
+#include <pinDefsAuto.h>
 
 #include <io128.h>
 #include <sra128.h>
+
+#include<avr/io.h>
+#include<util/delay.h>
+#include<avr/interrupt.h>
 
 #include "Pid.h"
 
@@ -10,9 +14,11 @@
 
 #define joystickBuffer 35
 
-#define opt 0
+int opt = 0;
 
 int LX = 0, LY = 0, RX = 0, RY = 0;
+int sLeft, sRight, sFront, sBack;
+int pwm = 666;
 
 float pidError = 0;
 
@@ -30,7 +36,15 @@ void setup()
   PORTF |= 0xFF;
   spiMasterInit();
 
+  PORTC = 0x00;
+
   Serial.begin(9600);
+
+  PORTC = 0xFF;
+  delay(500);
+  PORTC = 0x00;
+  delay(500);
+  Serial.print("fuck");
 }
 
 void loop()
@@ -41,7 +55,7 @@ void loop()
     LX = (psx_stick(PSS_LX)) - 127;
     LY = 127 - (psx_stick(PSS_LY));
     RX = (psx_stick(PSS_RX)) - 127;
-    RY =  127 - (psx_stick(PSS_RY)) ;
+    RY =  127 - (psx_stick(PSS_RY));
 
     Serial.println("Controller Disconnected");
     botKill();
@@ -50,11 +64,12 @@ void loop()
   
   pidError = getPidError();
   baseMotorsMotion();
-//  printData();
+  printData();
 }
 
 void baseMotorsInitialize()
 {
+  pwm0_init();
   pwm1_init();
   DDRF |= 0xFF;
   PORTF |= 0xFF;
@@ -62,56 +77,170 @@ void baseMotorsInitialize()
 
 void baseMotorsMotion()
 {
+  sLeft = 0;
+  sRight = 0;
+  sFront = 0;
+  sBack = 0;
+  
   LX = (psx_stick(PSS_LX)) - 127;
   LY = 127 - (psx_stick(PSS_LY));
   RX = (psx_stick(PSS_RX)) - 127;
-  RY =  127 - (psx_stick(PSS_RY)) ;
+  RY =  127 - (psx_stick(PSS_RY));
   
-//    if (LX > joystickBuffer || LX < 0 - joystickBuffer)
-//    {
-//      if (LX > 0)
-//      {
-//        sFront = map(LX, joystickBuffer, 127, 0, pwm);
-//        sBack = map(LX, joystickBuffer, 127, 0, pwm);
-//      }
-//      else if (LX < 0)
-//      {
-//        sFront = 0 - map(LX, -127, 0 - joystickBuffer, pwm, 0);
-//        sBack = 0 - map(X, -127, 0 - joystickBuffer, pwm, 0);
-//      }
-//    }
-//  
-//    else if (RY > joystickBuffer || RY < 0 - joystickBuffer)
-//    {
-//      if (RY > 0)
-//      {
-//        sLeft = map(RY, joystickBuffer, 127, 0, pwm);
-//        sRight = map(RY, joystickBuffer, 127, 0, pwm);
-//      }
-//      else if (RY < 0)
-//      {
-//        sLeft = 0 - map(RY, -127, 0 - joystickBuffer, pwm, 0);
-//        sRight = 0 - map(RY, -127, 0 - joystickBuffer, pwm, 0);
-//      }
-//    }
+  if (LX > joystickBuffer || LX < 0 - joystickBuffer)
+  {
+    if (LX > 0)
+    {
+      sFront = map(LX, joystickBuffer, 127, 0, pwm);
+      sBack = map(LX, joystickBuffer, 127, 0, pwm);
+    }
+    else if (LX < 0)
+    {
+      sFront = 0 - map(LX, -127, 0 - joystickBuffer, pwm, 0);
+      sBack = 0 - map(LX, -127, 0 - joystickBuffer, pwm, 0);
+    }
+  }
 
+  else if (RY > joystickBuffer || RY < 0 - joystickBuffer)
+  {
+    if (RY > 0)
+    {
+      sLeft = map(RY, joystickBuffer, 127, 0, pwm);
+      sRight = map(RY, joystickBuffer, 127, 0, pwm);
+    }
+    else if (RY < 0)
+    {
+      sLeft = 0 - map(RY, -127, 0 - joystickBuffer, pwm, 0);
+      sRight = 0 - map(RY, -127, 0 - joystickBuffer, pwm, 0);
+    }
+  }
+
+//  Serial.print(LX);
+//  Serial.print("  ");
+//  Serial.print(RY);
+//  Serial.print("  ");
+//  Serial.print(sFront);
+//  Serial.print("  ");
+//  Serial.print(sBack);
+//  Serial.print("  ");
+//  Serial.print(sLeft);
+//  Serial.print("  ");
+//  Serial.print(sRight);
+//  Serial.println("  ");
+
+  if(sFront < -30)
+  {
+    sFront *= (-1);
+    MOTORFA = 0;
+    MOTORFB = 1;
+    if (sFront > 666)
+      sFront = 666;
+    PWMF = sFront;
+  }
+  else if(sFront > 30)
+  {
+    MOTORFA = 1;
+    MOTORFB = 0;
+    if (sFront > 666)
+      sFront = 666;
+    PWMF = sFront;
+  }
+  else
+  {
+    MOTORFA = 1;
+    MOTORFB = 1;
+    PWMF = 666;
+  }
+  
+  if (sBack < -30)
+  {
+    sBack *= (-1);
+    MOTORBA = 0;
+    MOTORBB = 1;
+    if (sBack > 666)
+      sBack = 666;
+    PWMB = sBack;
+  }
+  else if (sBack > 30)
+  {
+    MOTORBA = 1;
+    MOTORBB = 0;
+    if (sBack > 666)
+      sBack = 666;
+    PWMB = sBack;
+  }
+  else
+  {
+    MOTORBA = 1;
+    MOTORBB = 1;
+    if (sBack > 666)
+      sBack = 666;
+    PWMB = 666;
+  }
+  
+  if (sLeft < -30)
+  {
+    sLeft *= (-1);
+    MOTORLA = 0;
+    MOTORLB = 1;
+    if (sLeft > 666)
+      sLeft = 666;
+    PWML = sLeft;
+  }
+  else if (sLeft > 30)
+  {
+    MOTORLA = 1;
+    MOTORLB = 0;
+    if (sLeft > 666)
+      sLeft = 666;
+    PWML = sLeft;
+  }
+  else
+  {
+    MOTORLA = 1;
+    MOTORLB = 1;
+    PWML = 666;
+  }
+  
+  if (sRight < -30)
+  {
+    sRight *= (-1);
+    MOTORRA = 0;
+    MOTORRB = 1;
+    if (sRight > 666)
+      sRight = 666;
+    PWMR = sRight;
+  }
+  else if (sRight > 30)
+  {
+    MOTORRA = 1;
+    MOTORRB = 0;
+    if (sRight > 666)
+      sRight = 666;
+    PWMR = sRight;
+  }
+  else
+  {
+    MOTORRA = 1;
+    MOTORRB = 1;
+    PWMR = 666;
+  }
+
+  if (psx_button_press(PSB_CROSS))
+  {
     if(pidError > 0)
       botLeft();
     else if(pidError < 0)
       botRight();
     else
       botBrake();
-
-  PWML = constrain(opt + pidError, lowerPWMConstrain, higherPWMConstrain);
-  PWMR = constrain(opt - pidError, lowerPWMConstrain, higherPWMConstrain);
-
-  if (psx_button_press(PSB_CROSS))
-  {
-    botKill();
-    Serial.println("Bot Brake");
+    
+    PWML = constrain(opt + pidError, lowerPWMConstrain, higherPWMConstrain);
+    PWMR = constrain(opt - pidError, lowerPWMConstrain, higherPWMConstrain);
+    Serial.println("line");
   }
 
-  if (psx_button_press(PSB_PAD_UP))
+  if (psx_button_press(PSB_L1))
   {
     if (pidFlag == 1)
       lKp += 1;
@@ -119,10 +248,11 @@ void baseMotorsMotion()
       lKi += 0.05;
     else if (pidFlag == 3)
       lKd += 0.1;
-    while (psx_button_press(PSB_PAD_UP));
+    while (psx_button_press(PSB_L1))
+      psx_read_gamepad();
   }
 
-  if (psx_button_press(PSB_PAD_DOWN))
+  if (psx_button_press(PSB_START))
   {
     if (pidFlag == 1)
       lKp -= 1;
@@ -130,28 +260,32 @@ void baseMotorsMotion()
       lKi -= 0.05;
     else if (pidFlag == 3)
       lKd -= 0.1;
-    while (psx_button_press(PSB_PAD_DOWN));
+    while (psx_button_press(PSB_START))
+      psx_read_gamepad();
   }
 
   if (psx_button_press(PSB_SQUARE))
   {
     pidFlag = 1;
     pidMode = 1;
-    while (psx_button_press(PSB_SQUARE));
+    while (psx_button_press(PSB_SQUARE))
+      psx_read_gamepad();
   }
 
   if (psx_button_press(PSB_TRIANGLE))
   {
     pidFlag = 2;
     pidMode = 2;
-    while (psx_button_press(PSB_TRIANGLE));
+    while (psx_button_press(PSB_TRIANGLE))
+      psx_read_gamepad();
   }
 
   if (psx_button_press(PSB_CIRCLE))
   {
     pidFlag = 3;
     pidMode = 3;
-    while (psx_button_press(PSB_CIRCLE));
+    while (psx_button_press(PSB_CIRCLE))
+      psx_read_gamepad();
   }
 }
 
@@ -212,16 +346,33 @@ void botBrake()
   MOTORRA = 1;
   MOTORRB = 1;
 
-  MOTORFA = 0;
-  MOTORFB = 0;
+  MOTORFA = 1;
+  MOTORFB = 1;
 
-  MOTORBA = 0;
-  MOTORBB = 0;
+  MOTORBA = 1;
+  MOTORBB = 1;
 }
 
 void printData()
 {
-  Serial.println(pidError);
+  Serial.print(pidMode);Serial.print('\t');
+  Serial.print(pidFlag);Serial.print('\t');
+  Serial.print(lKp);Serial.print('\t');
+  Serial.print(lKi);Serial.print('\t');
+  Serial.print(lKd);Serial.println('\t');
+//  Serial.print(pidError);Serial.print('\t');
+//  
+//  for(int i = 0; i < 8; i++)
+//  {
+//    Serial.print(sensorReadingsFront[i]);Serial.print('\t');
+//  }
+//  Serial.print('\t');
+//  
+//  for(int i = 0; i < 8; i++)
+//  {
+//    Serial.print(sensorReadingsBack[i]);Serial.print('\t');
+//  }
+//  Serial.println(" ");
 }
 
 void first_turn()

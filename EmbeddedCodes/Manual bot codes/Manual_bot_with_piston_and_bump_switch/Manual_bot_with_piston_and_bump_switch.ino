@@ -167,19 +167,19 @@ void baseMotorsMotion()
       sRight = 0 - map(stickRY, -127, 0 - joystickBuffer, pwm, 0);
     }
   }
-  //
-  //  Serial.print(stickLX);
-  //  Serial.print("\t");
-  //  Serial.print(stickRY);
-  //  Serial.print("\t");
-  //  Serial.print(sFront);
-  //  Serial.print("\t");
-  //  Serial.print(sBack);
-  //  Serial.print("\t");
-  //  Serial.print(sLeft);
-  //  Serial.print("\t");
-  //  Serial.println(sRight);
-  //  Serial.print("\t");
+  
+    Serial.print(stickLX);
+    Serial.print("\t");
+    Serial.print(stickRY);
+    Serial.print("\t");
+    Serial.print(sFront);
+    Serial.print("\t");
+    Serial.print(sBack);
+    Serial.print("\t");
+    Serial.print(sLeft);
+    Serial.print("\t");
+    Serial.println(sRight);
+    Serial.print("\t");
   //  Serial.print(PWMF);
   //  Serial.print("\t");
   //  Serial.print(PWMB);
