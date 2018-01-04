@@ -2,7 +2,7 @@
 //#define backSlaveSelect PF3
 
 #define sideSensorThreshold 500
-#define mainSensorThreshold 1500   
+#define mainSensorThreshold 1400   
 
 int leftFirst = 0, leftSecond = 0, leftThird = 0, leftFourth = 0;
 int rightFirst = 0, rightSecond = 0, rightThird = 0, rightFourth = 0;
@@ -10,13 +10,13 @@ int rightFirst = 0, rightSecond = 0, rightThird = 0, rightFourth = 0;
 int sensorReadingsFront[8];
 int sensorReadingsBack[8];
 
-int weightedSumFront = 0, weightedSumBack = 0; ///this must be global to be used in Draft2.ino
+int frontError = 0, backError = 0;
+// int sumFront, sumBack;
+//int weightedSumFront = 0, weightedSumBack = 0;
 
 float weightages[8];
 
 bool isSmooth = false; //this is global since used in main program
-
-// int sumFront, sumBack;
 
 void spiMasterInit(void)
 {
@@ -173,7 +173,9 @@ void multiplyWeightagesToReadings()
 
 float getLinePosition()
 { 
-  int sumFront, sumBack;
+  int sumFront = 0, sumBack = 0;
+  int weightedSumFront = 0, weightedSumBack = 0;
+  
   getSensorReadings();
   digitaliseReadings();
   for(int i = 0; i < 8; i++)
@@ -181,6 +183,7 @@ float getLinePosition()
     sumFront += sensorReadingsFront[i];
     sumBack += sensorReadingsBack[i];
   }
+  
   multiplyWeightagesToReadings();
   for(int i = 0; i < 8; i++)
   {
@@ -188,5 +191,26 @@ float getLinePosition()
     weightedSumBack += sensorReadingsBack[i];
   }
 
-  return (weightedSumFront / sumFront)*0.5 + (weightedSumBack / sumBack)*(-0.5);  //Sensors symmetric to center and opposite errors
+  if(sumFront == 0 && sumBack == 0);
+//  {
+//    frontError = frontError * 1.5;
+//    backError = backError * 1.5;
+//  }
+
+  else if(sumFront == 0)
+  {
+//    frontError = frontError * 1.5;
+    backError = (weightedSumBack / sumBack)*0.5;
+  }
+  else if(sumBack == 0)
+  {
+//    backError = backError * 1.5;
+    frontError = (weightedSumFront / sumFront)*0.5;
+  }
+  else 
+  {
+    frontError = (weightedSumFront / sumFront)*0.5;
+    backError = (weightedSumBack / sumBack)*0.5;
+  }
+  return (frontError + backError);  //Sensors symmetric to center and opposite errors
 }

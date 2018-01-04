@@ -22,8 +22,8 @@ int pwm = 666;
 
 float pidError = 0;
 
-float lowerPWMConstrain = 150;
-float higherPWMConstrain = 400;
+float lowerPWMConstrain = 50;
+float higherPWMConstrain = 250;
 
 void setup()
 {
@@ -61,10 +61,12 @@ void loop()
     botKill();
     psx_init(&PORTG, 0, &PORTG, 3, &PORTG, 1, &PORTG, 2);
   }
-  
-  pidError = getPidError();
-  baseMotorsMotion();
-  printData();
+  else
+  {
+    pidError = getPidError();
+    baseMotorsMotion();
+    printData();
+  }
 }
 
 void baseMotorsInitialize()
@@ -227,16 +229,32 @@ void baseMotorsMotion()
   }
 
   if (psx_button_press(PSB_CROSS))
-  { 
+  {
+    MOTORLA = 1;
+    MOTORLB = 0;
+    MOTORRA = 1;
+    MOTORRB = 0;
+    
     PWML = constrain(opt + pidError, lowerPWMConstrain, higherPWMConstrain);
-    PWMR = constrain(opt - pidError, lowerPWMConstrain, higherPWMConstrain);
+    PWMR = constrain(opt + 35 - pidError, lowerPWMConstrain, higherPWMConstrain);
+    
     Serial.println("line");
   }
 
+  if (psx_button_click(PSB_R1,flag_R1))
+  {
+    if (pidFlag == 1)
+      lKp = 0;
+    else if (pidFlag == 2)
+      lKi = 0;
+    else if (pidFlag == 3)
+      lKd = 0;
+  }
+  
   if (psx_button_click(PSB_L1,flag_L1))
   {
     if (pidFlag == 1)
-      lKp += 1;
+      lKp += 2;
     else if (pidFlag == 2)
       lKi += 0.05;
     else if (pidFlag == 3)
@@ -246,7 +264,7 @@ void baseMotorsMotion()
   if (psx_button_click(PSB_L2,flag_L2))
   {
     if (pidFlag == 1)
-      lKp -= 1;
+      lKp -= 2;
     else if (pidFlag == 2)
       lKi -= 0.05;
     else if (pidFlag == 3)
@@ -339,10 +357,11 @@ void botBrake()
 void printData()
 {
 //  Serial.print(pidMode);Serial.print('\t');
-//  Serial.print(pidFlag);Serial.print('\t');
-//  Serial.print(lKp);Serial.print('\t');
-//  Serial.print(lKi);Serial.print('\t');
-//  Serial.print(lKd);Serial.println('\t');
+  Serial.print(pidFlag);Serial.print('\t');
+  Serial.print(lKp);Serial.print('\t');
+  Serial.print(lKi);Serial.print('\t');
+  Serial.print(lKd);Serial.print('\t');
+//  Serial.print(lineError);Serial.print('\t');
   Serial.print(pidError);Serial.print('\t');
   
   for(int i = 0; i < 8; i++)
