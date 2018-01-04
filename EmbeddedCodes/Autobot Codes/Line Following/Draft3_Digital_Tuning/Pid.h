@@ -23,8 +23,8 @@ float lKp = 0, lKd = 0, lKi = 0;
 #define lineIntegralLimit 0
 #define encoderIntegralLimit 0
 
-#define lineWeight 0
-#define smoothLineWeight 0
+#define lineWeight 1
+#define smoothLineWeight 1
 
 #define encoderWeight 0
 #define smoothEncoderWeight 0

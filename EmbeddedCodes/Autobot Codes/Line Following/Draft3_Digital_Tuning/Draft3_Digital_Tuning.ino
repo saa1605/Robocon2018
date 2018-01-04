@@ -14,7 +14,7 @@
 
 #define joystickBuffer 35
 
-int opt = 0;
+int opt = 150;
 
 int LX = 0, LY = 0, RX = 0, RY = 0;
 int sLeft, sRight, sFront, sBack;
@@ -22,8 +22,8 @@ int pwm = 666;
 
 float pidError = 0;
 
-float lowerPWMConstrain = 0;
-float higherPWMConstrain = 0;
+float lowerPWMConstrain = 150;
+float higherPWMConstrain = 400;
 
 void setup()
 {
@@ -227,20 +227,13 @@ void baseMotorsMotion()
   }
 
   if (psx_button_press(PSB_CROSS))
-  {
-    if(pidError > 0)
-      botLeft();
-    else if(pidError < 0)
-      botRight();
-    else
-      botBrake();
-    
+  { 
     PWML = constrain(opt + pidError, lowerPWMConstrain, higherPWMConstrain);
     PWMR = constrain(opt - pidError, lowerPWMConstrain, higherPWMConstrain);
     Serial.println("line");
   }
 
-  if (psx_button_press(PSB_L1))
+  if (psx_button_click(PSB_L1,flag_L1))
   {
     if (pidFlag == 1)
       lKp += 1;
@@ -248,11 +241,9 @@ void baseMotorsMotion()
       lKi += 0.05;
     else if (pidFlag == 3)
       lKd += 0.1;
-    while (psx_button_press(PSB_L1))
-      psx_read_gamepad();
   }
 
-  if (psx_button_press(PSB_START))
+  if (psx_button_click(PSB_L2,flag_L2))
   {
     if (pidFlag == 1)
       lKp -= 1;
@@ -260,32 +251,24 @@ void baseMotorsMotion()
       lKi -= 0.05;
     else if (pidFlag == 3)
       lKd -= 0.1;
-    while (psx_button_press(PSB_START))
-      psx_read_gamepad();
   }
 
-  if (psx_button_press(PSB_SQUARE))
+  if (psx_button_click(PSB_PAD_LEFT,flag_PAD_LEFT))
   {
     pidFlag = 1;
     pidMode = 1;
-    while (psx_button_press(PSB_SQUARE))
-      psx_read_gamepad();
   }
 
-  if (psx_button_press(PSB_TRIANGLE))
+  if (psx_button_click(PSB_PAD_RIGHT,flag_PAD_RIGHT))
   {
     pidFlag = 2;
     pidMode = 2;
-    while (psx_button_press(PSB_TRIANGLE))
-      psx_read_gamepad();
   }
 
-  if (psx_button_press(PSB_CIRCLE))
+  if (psx_button_click(PSB_CIRCLE,flag_CIRCLE))
   {
     pidFlag = 3;
     pidMode = 3;
-    while (psx_button_press(PSB_CIRCLE))
-      psx_read_gamepad();
   }
 }
 
@@ -355,24 +338,24 @@ void botBrake()
 
 void printData()
 {
-  Serial.print(pidMode);Serial.print('\t');
-  Serial.print(pidFlag);Serial.print('\t');
-  Serial.print(lKp);Serial.print('\t');
-  Serial.print(lKi);Serial.print('\t');
-  Serial.print(lKd);Serial.println('\t');
-//  Serial.print(pidError);Serial.print('\t');
-//  
-//  for(int i = 0; i < 8; i++)
-//  {
-//    Serial.print(sensorReadingsFront[i]);Serial.print('\t');
-//  }
-//  Serial.print('\t');
-//  
-//  for(int i = 0; i < 8; i++)
-//  {
-//    Serial.print(sensorReadingsBack[i]);Serial.print('\t');
-//  }
-//  Serial.println(" ");
+//  Serial.print(pidMode);Serial.print('\t');
+//  Serial.print(pidFlag);Serial.print('\t');
+//  Serial.print(lKp);Serial.print('\t');
+//  Serial.print(lKi);Serial.print('\t');
+//  Serial.print(lKd);Serial.println('\t');
+  Serial.print(pidError);Serial.print('\t');
+  
+  for(int i = 0; i < 8; i++)
+  {
+    Serial.print(sensorReadingsFront[i]);Serial.print('\t');
+  }
+  Serial.print('\t');
+  
+  for(int i = 0; i < 8; i++)
+  {
+    Serial.print(sensorReadingsBack[i]);Serial.print('\t');
+  }
+  Serial.println(" ");
 }
 
 void first_turn()
