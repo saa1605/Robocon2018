@@ -14,16 +14,17 @@
 
 #define joystickBuffer 35
 
+#define lowerRotationalConstrain = 50;
+#define higherRotationalConstrain = 250;
+
+#define lowerTranslationalConstrain = 50;
+#define higherTranslationalConstrain = 250;
+
 int opt = 150;
 
 int LX = 0, LY = 0, RX = 0, RY = 0;
 int sLeft, sRight, sFront, sBack;
 int pwm = 666;
-
-float pidError = 0;
-
-float lowerPWMConstrain = 50;
-float higherPWMConstrain = 250;
 
 void setup()
 {
@@ -63,7 +64,7 @@ void loop()
   }
   else
   {
-    pidError = getPidError();
+    getPidError();
     baseMotorsMotion();
     printData();
   }
@@ -137,7 +138,8 @@ void baseMotorsMotion()
     MOTORFB = 1;
     if (sFront > 666)
       sFront = 666;
-    PWMF = sFront;
+    PWMF = map(sFront, 0, 666, 0, 255);
+//    PWMF = sFront;
   }
   else if(sFront > 30)
   {
@@ -145,7 +147,8 @@ void baseMotorsMotion()
     MOTORFB = 0;
     if (sFront > 666)
       sFront = 666;
-    PWMF = sFront;
+    PWMF = map(sFront, 0, 666, 0, 255);
+//    PWMF = sFront;
   }
   else
   {
@@ -234,9 +237,16 @@ void baseMotorsMotion()
     MOTORLB = 0;
     MOTORRA = 1;
     MOTORRB = 0;
+    MOTORFA = 1;
+    MOTORFB = 0;
+    MOTORBA = 1;
+    MOTORBB = 0;
     
-    PWML = constrain(opt + pidError, lowerPWMConstrain, higherPWMConstrain);
-    PWMR = constrain(opt + 35 - pidError, lowerPWMConstrain, higherPWMConstrain);
+    PWML = constrain(opt + lineRotationalPid, lowerRotationalConstrain, higherRotationalConstrain);
+    PWMR = constrain(opt + 35 - lineRotationalPid, lowerRotationalConstrain, higherRotationalConstrain);
+
+    PWMF = constrain(lineTranstionalPid, lowerTranslationalConstrain, higherTranslationConstrain);
+    PWMB = constrain(lineTranstionalPid, lowerTranslationalConstrain, higherTranslationalConstrain);
     
     Serial.println("line");
   }
@@ -272,19 +282,13 @@ void baseMotorsMotion()
   }
 
   if (psx_button_click(PSB_PAD_LEFT,flag_PAD_LEFT))
-  {
     pidMode = 1;
-  }
 
   if (psx_button_click(PSB_PAD_RIGHT,flag_PAD_RIGHT))
-  {
     pidMode = 2;
-  }
 
   if (psx_button_click(PSB_CIRCLE,flag_CIRCLE))
-  {
     pidMode = 3;
-  }
 }
 
 void botKill()

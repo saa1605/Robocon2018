@@ -89,19 +89,19 @@ void calcEncoderPid(float encoderPos)
   prevEncoderError = encoderError;
 }
 
-float getPidError()
+getPidError()
 {
   getLinePosition();
   float encoderPos = getEncoderPosition();
   calcLineRotationalPid(lineRotationalPos);
   calcLineTranslationalPid(lineTranslationalPos);
   calcEncoderPid(encoderPos);
-  if(isSmooth)
-  {
-    return (smoothLineWeight*linePid + smoothEncoderWeight*encoderPid);
-  }
-  else
-  {
-    return (lineRotationalWeight*lineRotationalPid + lineTranslationalWeight*lineTranslationalPid + encoderWeight*encoderPid); 
-  }
+//  if(isSmooth)
+//  {
+//    return (smoothLineWeight*linePid + smoothEncoderWeight*encoderPid);
+//  }
+//  else
+//  {
+//    return (lineRotationalWeight*lineRotationalPid + lineTranslationalWeight*lineTranslationalPid + encoderWeight*encoderPid); 
+//  }
 }
