@@ -14,18 +14,17 @@
 
 #define joystickBuffer 35
 
-#define lowerRotationalConstrain = 50;
-#define higherRotationalConstrain = 250;
+#define lowerRotationalConstrain 50
+#define higherRotationalConstrain 250
 
-#define lowerTranslationalConstrain = 50;
-#define higherTranslationalConstrain = 250;
-
+#define lowerTranslationalConstrain 50
+#define higherTranslationalConstrain 250
 int opt = 150;
 
 int LX = 0, LY = 0, RX = 0, RY = 0;
 int sLeft, sRight, sFront, sBack;
 int pwm = 666;
-
+int togglePid = 0;
 void setup()
 {
   psx_init(&PORTG, 0, &PORTG, 3, &PORTG, 1, &PORTG, 2);
@@ -49,8 +48,11 @@ void setup()
 }
 
 void loop()
-{
+{ //PORTC=0xFF;
+ //delay(1000);
   psx_read_gamepad();
+  //PORTC=0x00;
+  //delay(1000);
   if (LX = 128 && LY == (-128) && RX == 128 && RY == (-128))
   {
     LX = (psx_stick(PSS_LX)) - 127;
@@ -245,40 +247,83 @@ void baseMotorsMotion()
     PWML = constrain(opt + lineRotationalPid, lowerRotationalConstrain, higherRotationalConstrain);
     PWMR = constrain(opt + 35 - lineRotationalPid, lowerRotationalConstrain, higherRotationalConstrain);
 
-    PWMF = constrain(lineTranstionalPid, lowerTranslationalConstrain, higherTranslationConstrain);
-    PWMB = constrain(lineTranstionalPid, lowerTranslationalConstrain, higherTranslationalConstrain);
+    PWMF = constrain(lineTranslationalPid, lowerTranslationalConstrain, higherTranslationalConstrain);
+    PWMB = constrain(lineTranslationalPid, lowerTranslationalConstrain, higherTranslationalConstrain);
     
     Serial.println("line");
   }
-
+  if (psx_button_click(PSB_PAD_UP,flag_PAD_UP))
+  {
+    togglePid = 0;
+  }
+  if (psx_button_click(PSB_PAD_DOWN,flag_PAD_DOWN))
+  {
+    togglePid = 1;
+  }
   if (psx_button_click(PSB_R1,flag_R1))
   {
-    if (pidMode == 1)
-      lKp = 0;
-    else if (pidMode == 2)
-      lKi = 0;
-    else if (pidMode == 3)
-      lKd = 0;
+    if(togglePid == 0)
+    {
+      if (pidMode == 1)
+        rKp = 0;
+      else if (pidMode == 2)
+        rKi = 0;
+      else if (pidMode == 3)
+        rKd = 0;
+    }
+    else if(togglePid == 1)
+    {
+      if (pidMode == 1)
+        tKp = 0;
+      else if (pidMode == 2)
+        tKi = 0;
+      else if (pidMode == 3)
+        tKd = 0;
+    }
   }
   
   if (psx_button_click(PSB_L1,flag_L1))
   {
-    if (pidMode == 1)
-      lKp += 2;
-    else if (pidMode == 2)
-      lKi += 0.05;
-    else if (pidMode == 3)
-      lKd += 0.1;
+    if(togglePid == 0)
+    {
+      if (pidMode == 1)
+        rKp += 2;
+      else if (pidMode == 2)
+        rKi += 0.05;
+      else if (pidMode == 3)
+        rKd += 0.1;
+    }
+    else if(togglePid == 1)
+    {
+      if (pidMode == 1)
+        tKp += 2;
+      else if (pidMode == 2)
+        tKi += 0.05;
+      else if (pidMode == 3)
+        tKd += 0.1;
+    }
   }
 
   if (psx_button_click(PSB_L2,flag_L2))
   {
-    if (pidMode == 1)
-      lKp -= 2;
-    else if (pidMode == 2)
-      lKi -= 0.05;
-    else if (pidMode == 3)
-      lKd -= 0.1;
+    if(togglePid == 0)
+    {
+      if (pidMode == 1)
+        rKp -= 2;
+      else if (pidMode == 2)
+        rKi -= 0.05;
+      else if (pidMode == 3)
+        rKd -= 0.1;
+    }
+    else if(togglePid == 1)
+    {
+      if (pidMode == 1)
+        tKp -= 2;
+      else if (pidMode == 2)
+        tKi -= 0.05;
+      else if (pidMode == 3)
+        tKd -= 0.1;
+    }
   }
 
   if (psx_button_click(PSB_PAD_LEFT,flag_PAD_LEFT))
@@ -357,13 +402,19 @@ void botBrake()
 
 void printData()
 {
-//  Serial.print(pidMode);Serial.print('\t');
-  Serial.print(pidFlag);Serial.print('\t');
-  Serial.print(lKp);Serial.print('\t');
-  Serial.print(lKi);Serial.print('\t');
-  Serial.print(lKd);Serial.print('\t');
+  Serial.print(pidMode);Serial.print(' ');
+  Serial.print(togglePid);Serial.print(' ');
+
+//  Serial.print(pidFlag)/;Serial.print('\t');
+  
+  Serial.print(rKp);Serial.print(' ');
+  Serial.print(rKi);Serial.print(' ');
+  Serial.print(rKd);Serial.print(' ');
+  Serial.print(tKp);Serial.print(' ');
+  Serial.print(tKi);Serial.print(' ');
+  Serial.print(tKd);Serial.print(' ');
 //  Serial.print(lineError);Serial.print('\t');
-  Serial.print(pidError);Serial.print('\t');
+//  Serial.print(pidError);Serial.print('\t');
   
   for(int i = 0; i < 8; i++)
   {
