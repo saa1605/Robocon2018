@@ -243,49 +243,46 @@ void baseMotorsMotion()
 
   if (psx_button_click(PSB_R1,flag_R1))
   {
-    if (pidFlag == 1)
+    if (pidMode == 1)
       lKp = 0;
-    else if (pidFlag == 2)
+    else if (pidMode == 2)
       lKi = 0;
-    else if (pidFlag == 3)
+    else if (pidMode == 3)
       lKd = 0;
   }
   
   if (psx_button_click(PSB_L1,flag_L1))
   {
-    if (pidFlag == 1)
+    if (pidMode == 1)
       lKp += 2;
-    else if (pidFlag == 2)
+    else if (pidMode == 2)
       lKi += 0.05;
-    else if (pidFlag == 3)
+    else if (pidMode == 3)
       lKd += 0.1;
   }
 
   if (psx_button_click(PSB_L2,flag_L2))
   {
-    if (pidFlag == 1)
+    if (pidMode == 1)
       lKp -= 2;
-    else if (pidFlag == 2)
+    else if (pidMode == 2)
       lKi -= 0.05;
-    else if (pidFlag == 3)
+    else if (pidMode == 3)
       lKd -= 0.1;
   }
 
   if (psx_button_click(PSB_PAD_LEFT,flag_PAD_LEFT))
   {
-    pidFlag = 1;
     pidMode = 1;
   }
 
   if (psx_button_click(PSB_PAD_RIGHT,flag_PAD_RIGHT))
   {
-    pidFlag = 2;
     pidMode = 2;
   }
 
   if (psx_button_click(PSB_CIRCLE,flag_CIRCLE))
   {
-    pidFlag = 3;
     pidMode = 3;
   }
 }

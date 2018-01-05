@@ -14,9 +14,11 @@ int frontError = 0, backError = 0;
 // int sumFront, sumBack;
 //int weightedSumFront = 0, weightedSumBack = 0;
 
+int lineRotationalPos = 0, lineTranslationalPos = 0;
+
 float weightages[8];
 
-bool isSmooth = false; //this is global since used in main program
+bool isSmooth = false;		//this is global since used in main program
 
 void spiMasterInit(void)
 {
@@ -171,8 +173,8 @@ void multiplyWeightagesToReadings()
   } 
 }
 
-float getLinePosition()
-{ 
+void getLinePosition()
+{
   int sumFront = 0, sumBack = 0;
   int weightedSumFront = 0, weightedSumBack = 0;
   
@@ -192,25 +194,21 @@ float getLinePosition()
   }
 
   if(sumFront == 0 && sumBack == 0);
-//  {
-//    frontError = frontError * 1.5;
-//    backError = backError * 1.5;
-//  }
 
   else if(sumFront == 0)
   {
-//    frontError = frontError * 1.5;
-    backError = (weightedSumBack / sumBack)*0.5;
+    backError = (weightedSumBack / sumBack) * 0.5;
   }
   else if(sumBack == 0)
   {
-//    backError = backError * 1.5;
-    frontError = (weightedSumFront / sumFront)*0.5;
+    frontError = (weightedSumFront / sumFront) * 0.5;
   }
   else 
   {
-    frontError = (weightedSumFront / sumFront)*0.5;
-    backError = (weightedSumBack / sumBack)*0.5;
+    frontError = (weightedSumFront / sumFront) * 0.5;
+    backError = (weightedSumBack / sumBack) * 0.5;
   }
-  return (frontError + backError);  //Sensors symmetric to center and opposite errors
+  
+  lineRotationalPos = frontError + backError;
+  lineTranslationalPos = frontError - backError;
 }
