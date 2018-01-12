@@ -9,8 +9,8 @@ int pidMode = 1, toggle = 0;
 
 #define numOfSensors 8
 
-float normalKPError = 0, normalKDError = 0, normalKPRotation = 0, normalKDRotation = 0;
-int normalOpt = 600;
+float alignKPError = 0, alignKDError = 0, alignKPRotation = 0, alignKDRotation = 0;
+int alignOpt = 600;
 
 float fastKPError = 0, fastKDError = 0, fastKPRotation = 0, fastKDRotation = 0;
 int fastOpt = 5000;
@@ -40,19 +40,21 @@ int sensorMaxBack[numOfSensors] = {0, 0, 0, 0, 0, 0, 0, 0};                     
 #define maxJoystick (128 - joystickBuffer)
 #define diagonalJoystickBuffer 35
 
-int errorRight = 0, errorLeft = 0, errorFront = 0, errorBack = 0, error = 0, prevError = 0;          ////////////////////////
+int errorRight = 0, errorLeft = 0, errorFront = 0, errorBack = 0, error = 0, prevError = 0;          
 int rotation = 0, prevRotation = 0;
 
 int sensorRawRight[numOfSensors], sensorValRight[numOfSensors], sensorRawLeft[numOfSensors], sensorValLeft[numOfSensors];
 int sensorRawFront[numOfSensors], sensorValFront[numOfSensors], sensorRawBack[numOfSensors], sensorValBack[numOfSensors];
-int turnFlag = 2;
-bool firstTurn = 1;                                   //////////////////////////////////////////////
+int turnFlag = 0, prevTurnFlag = 0;  //0-Left  1-Right  2-Forward  3-Back
+bool firstTurn = 1;   //0-after 1st turn and 1-before                                  
 
 //float kPError = normalKPError, kDError = normalKDError, kPRotation = normalKPRotation, kDRotation = normalKDRotation;
 //int opt = normalOpt;
 float kPError = fastKPError, kDError = fastKDError, kPRotation = fastKPRotation, kDRotation = fastKDRotation;
 int opt = fastOpt;
-int setRot = 0, setErr = 0;
+
+int junc_count = 0;
+bool flag_debounce = true;
 
 int sLeft, sRight, sFront, sBack;
 
@@ -122,13 +124,24 @@ void serialPrint()
   Serial.print(kPError);Serial.print(' ');
   Serial.print(kDError);Serial.print(' ');
   Serial.print('\t');
-  
-  Serial.print(sFront);Serial.print(' ');
-  Serial.print(sBack);Serial.print(' ');
-  Serial.print(sLeft);Serial.print(' ');
-  Serial.print(sRight);Serial.print(' ');
-  Serial.print('\t');
-  
+
+//  Serial.print(sFront);Serial.print(' ');
+//  Serial.print(sBack);Serial.print(' ');
+//  Serial.print(sLeft);Serial.print(' ');
+//  Serial.print(sRight);Serial.print(' ');
+//  Serial.print('\t');
+
+//  for(int i = 0; i < numOfSensors; i++)
+//  {
+//    Serial.print(sensorRawLeft[i]);Serial.print(' ');
+//  }
+//  Serial.print("\t");
+//  for(int i = 0; i < numOfSensors; i++)
+//  {
+//    Serial.print(sensorRawRight[i]);Serial.print(' ');
+//  }
+//  Serial.print("\t");
+
 //  for(int i = 0; i < numOfSensors; i++)
 //  {
 //    Serial.print(sensorRawFront[i]);Serial.print(' ');
@@ -159,15 +172,6 @@ void serialPrint()
   Serial.print(error);
   Serial.print("  Rot = ");
   Serial.print(rotation);
- ///
-//  Serial.print("  crntJnctn = ");
-//  Serial.print(currentJunction);
-//  Serial.print("  dsrdJnctn = ");
-//  Serial.print(desiredJunction);
-//  Serial.print("  jnctnOnLt = ");
-//  Serial.print(junctionOnLeft);
-//  Serial.print("  jnctnOnRt = ");
-//  Serial.print(junctionOnRight);
   
   Serial.println("");
 }
@@ -178,6 +182,8 @@ void baseMotorsInitialize()
   PORTC |= 0xFF;
   pwm0_init();
   pwm1_init();
+  DDRD |= (1 << PD6) | (1 << PD7);
+  PORTD |= (1 << PD6) | (1 << PD7);
 }
 
 void clampPistonInit()
@@ -195,6 +201,7 @@ void arucoInterfaceInit()
 
 void baseMotorsMotion()
 {
+  PORTD |= (1 << PD7);  //for unbraking base motors
   sFront = 0;
   sLeft = 0;
   sBack = 0;
@@ -309,8 +316,8 @@ void baseMotorsMotion()
     MOTORFB = 1;
     if(sFront > 666)
       sFront = 666;
-    PWMF = map(sFront, 0, 666, 0, 255);
-//    PWMF = sFront;
+    sFront = map(sFront, 0, 666, 0, 255);
+    PWMF = sFront;
   }
   else if(sFront > 30)
   {
@@ -318,8 +325,8 @@ void baseMotorsMotion()
     MOTORFB = 0;
     if(sFront > 666)
       sFront = 666;
-    PWMF = map(sFront, 0, 666, 0, 255);
-//    PWMF = sFront;
+    sFront = map(sFront, 0, 666, 0, 255);
+    PWMF = sFront;
   }
   else
   {
@@ -403,7 +410,7 @@ void baseMotorsMotion()
   }
 }
 
-void readSensorFront()
+void readSensorFront() //front dekha toh left wala 0
 {
   sensorRawFront[0] = getSensorReading(frontSensor, 4);
   sensorRawFront[1] = getSensorReading(frontSensor, 5);
@@ -415,7 +422,7 @@ void readSensorFront()
   sensorRawFront[7] = getSensorReading(frontSensor, 3);
 }
 
-void readSensorBack()
+void readSensorBack() //front dekha toh left wala 0
 {
   sensorRawBack[0] = getSensorReading(backSensor, 3);
   sensorRawBack[1] = getSensorReading(backSensor, 2);
@@ -515,8 +522,8 @@ void calibrateFront()
   }
   for(int j = 0; j < numOfSensors; j++)
   {
-    sensorMinFront[j] += 1;
-    sensorMaxFront[j] -= 1;
+    sensorMinFront[j] -= 1;
+    sensorMaxFront[j] += 1;
   }
   Serial.println("Front Calibrated");
   for(int i = 0; i < numOfSensors; i++)
@@ -549,8 +556,8 @@ void calibrateBack()
   }
   for(int j = 0; j < numOfSensors; j++)
   {
-    sensorMinBack[j] += 1;
-    sensorMaxBack[j] -= 1;
+    sensorMinBack[j] -= 1;
+    sensorMaxBack[j] += 1;
   }
   Serial.println("Back Calibrated");
   for(int i = 0; i < numOfSensors; i++)
@@ -636,8 +643,9 @@ void calibrateLeft()
   _delay_ms(1000);
 }
 
-void calcErrorFront()
+void calcErrorFront() //extreme right 3500 and left -3500
 {
+  frontOnline = 0;
   unsigned long avg = 0, sum = 0, pos = (numOfSensors - 1) * 1000.0;
   for (int j = 0; j < numOfSensors; j++)
   {
@@ -664,8 +672,9 @@ void calcErrorFront()
   errorFront = pos - (numOfSensors - 1) * 500.0;
 }
 
-void calcErrorBack()
+void calcErrorBack()  //extreme right 3500 and left -3500
 {
+  backOnline = 0;
   unsigned long avg = 0, sum = 0, pos = (numOfSensors - 1) * 1000.0;
   for (int j = 0; j < numOfSensors; j++)
   {
@@ -694,6 +703,7 @@ void calcErrorBack()
 
 void calcErrorLeft()
 {
+  leftOnline = 0;
   unsigned long avg = 0, sum = 0, pos = (numOfSensors - 1) * 1000.0;
   for (int j = 0; j < numOfSensors; j++)
   {
@@ -722,6 +732,7 @@ void calcErrorLeft()
 
 void calcErrorRight()
 {
+  rightOnline = 0;
   unsigned long avg = 0, sum = 0, pos = (numOfSensors - 1) * 1000.0;
   for (int j = 0; j < numOfSensors; j++)
   {
@@ -737,7 +748,6 @@ void calcErrorRight()
   {
     pos = avg / sum;
   }
-
   if(rightOnline == 0)
   {
     if(errorRight > 0)
@@ -752,31 +762,28 @@ void calcErrorAndRotation()  //error is negative when bot is behind the line  //
 {
   if(turnFlag == 0 || turnFlag == 1)
   {
-    error = (errorRight + errorLeft)*(10000.0/7000.0) - setErr;
-    rotation = (errorRight - errorLeft) - setRot;
+    error = (errorRight + errorLeft)*(10000.0/7000.0);
+    rotation = (errorRight - errorLeft);
   }
   else if(turnFlag == 2 || turnFlag == 3)
   {
-    error = (errorFront + errorBack)*(10000.0/7000.0) - setErr;
-    rotation = (errorFront - errorBack) - setRot;
+    error = (errorFront + errorBack)*(10000.0/7000.0);
+    rotation = (errorFront - errorBack);
   }
 }
 
-void calcSpeedToLeft()
+void pidAlign(int pidAlign)
 {
-  sFront = 0 - (opt - kPRotation * rotation + kDRotation * (rotation - prevRotation));
-  sLeft  =     (kPError * error - kDError * (error - prevError));
-  sBack  = 0 - (opt + kPRotation * rotation - kDRotation * (rotation - prevRotation));
-  sRight =     (kPError*error - kDError * (error - prevError));
-
-  if(sFront > 0)
-    sFront = 0;
-
-  if(sBack > 0)
-    sBack = 0;
-
-  prevError = error;
-  prevRotation = rotation;
+  if(pidAlign)
+  {
+    kPError = alignKPError; kDError = alignKDError; kPRotation = alignKPRotation; kDRotation = alignKDRotation;
+    opt = alignOpt;
+  }
+  else
+  {
+    kPError = fastKPError; kDError = fastKDError; kPRotation = fastKPRotation; kDRotation = fastKDRotation;
+    opt = fastOpt;
+  }
 }
 
 void calcSpeedToMotors()
@@ -814,28 +821,28 @@ void calcSpeedToMotors()
     case 2:
     ///to front
     sFront  =     (kPError * error - kDError * (error - prevError));  
-    sLeft   = 0 - (opt - kPRotation * rotation - kDRotation * (rotation - prevRotation));
+    sLeft   =     (opt + kPRotation * rotation - kDRotation * (rotation - prevRotation));
     sBack   =     (kPError * error - kDError * (error - prevError));
-    sRight  = 0 - (opt + kPRotation * rotation + kDRotation * (rotation - prevRotation));
-
-    if(sLeft > 0)
-      sLeft = 0;
-
-    if(sRight > 0)
-      sRight = 0;
-    break;
-    
-    case 3:
-    //to back
-    sFront  = 0 - (kPError * error - kDError * (error - prevError));  
-    sLeft   =     (opt - kPRotation * rotation - kDRotation * (rotation - prevRotation));
-    sBack   = 0 - (kPError * error - kDError * (error - prevError));
-    sRight  =     (opt + kPRotation * rotation + kDRotation * (rotation - prevRotation));
+    sRight  =     (opt - kPRotation * rotation + kDRotation * (rotation - prevRotation));
 
     if(sLeft < 0)
       sLeft = 0;
 
     if(sRight < 0)
+      sRight = 0;
+    break;
+    
+    case 3:
+    //to back
+    sFront  =     (kPError * error - kDError * (error - prevError));  
+    sLeft   = 0 - (opt - kPRotation * rotation + kDRotation * (rotation - prevRotation));
+    sBack   =     (kPError * error - kDError * (error - prevError));
+    sRight  = 0 - (opt + kPRotation * rotation - kDRotation * (rotation - prevRotation));
+
+    if(sLeft > 0)
+      sLeft = 0;
+
+    if(sRight > 0)
       sRight = 0;
     break;
 
@@ -847,6 +854,8 @@ void calcSpeedToMotors()
 
 void uploadSpeedLineFollow(int maxPWMLine)
 {
+  PORTD |= (1 << PD7);  //for unbraking base motors
+
   if(turnFlag == 0 || turnFlag == 1)
   {
     sFront = map(sFront, 0 - (opt + kPRotation * 7000), (opt + kPRotation * 7000), 0 - maxPWM + 350, maxPWM - 350);
@@ -856,12 +865,18 @@ void uploadSpeedLineFollow(int maxPWMLine)
   }
   else if (turnFlag == 2 || turnFlag == 3)
   {
-    sFront = map(sLeft,  0 - 10000*kPError, 10000*kPError, 0 - maxPWMLine*0.5 + 100, maxPWMLine*0.5 - 100);
-    sLeft = map(sFront, 0 - (opt + kPRotation * 7000), (opt + kPRotation * 7000), 0 - maxPWM + 350, maxPWM - 350);
-    sBack = map(sRight, 0 - 10000*kPError, 10000*kPError, 0 - maxPWMLine*0.5 + 100, maxPWMLine*0.5 - 100);
-    sRight  = map(sBack,  0 - (opt + kPRotation * 7000), (opt + kPRotation * 7000), 0 - maxPWM + 350, maxPWM - 350);
-    
+    sFront = map(sFront, 0 - 10000*kPError, 10000*kPError, 0 - maxPWMLine*0.5 + 100, maxPWMLine*0.5 - 100);
+    sLeft = map(sLeft,   0 - (opt + kPRotation * 7000), (opt + kPRotation * 7000), 0 - maxPWM + 350, maxPWM - 350);
+    sBack = map(sBack,   0 - 10000*kPError, 10000*kPError, 0 - maxPWMLine*0.5 + 100, maxPWMLine*0.5 - 100);
+    sRight = map(sRight, 0 - (opt + kPRotation * 7000), (opt + kPRotation * 7000), 0 - maxPWM + 350, maxPWM - 350);
   }
+  
+  Serial.print(sFront);Serial.print(' ');
+  Serial.print(sBack);Serial.print(' ');
+  Serial.print(sLeft);Serial.print(' ');
+  Serial.print(sRight);Serial.print(' ');
+  Serial.print('\t');
+  
   if(sFront < -30)
   {
     sFront *= (-1);
@@ -869,8 +884,8 @@ void uploadSpeedLineFollow(int maxPWMLine)
     MOTORFB = 1;
     if(sFront > maxPWMLine)
       sFront = maxPWMLine;
-    PWMF = map(sFront, 0, 666, 0, 255);
-//    PWMF = sFront;
+    sFront = map(sFront, 0, 666, 0, 255);
+    PWMF = sFront;
   }
   else if(sFront > 30)
   {
@@ -878,8 +893,8 @@ void uploadSpeedLineFollow(int maxPWMLine)
     MOTORFB = 0;
     if(sFront > maxPWMLine)
       sFront = maxPWMLine;
-    PWMF = map(sFront, 0, 666, 0, 255);
-//    PWMF = sFront;
+    sFront = map(sFront, 0, 666, 0, 255);
+    PWMF = sFront;
   }
   else
   {
@@ -974,7 +989,7 @@ int lineFollow()
     calcErrorFront();
     calcErrorBack();
   }
-  if(turnFlag == 0 || turnFlag == 1)
+  else if(turnFlag == 0 || turnFlag == 1)
   {
     readSensorLeft();
     readSensorRight();
@@ -984,30 +999,62 @@ int lineFollow()
     calcErrorRight();
   }
 
-  // if(leftOnline == 0 && rightOnline >= 2 && frontOnline >= 2 && backOnline == 0 && firstTurn == 1)
-  // {
-  //   turnFlag = 2;
-  //  firstTurn = 0;
-  // }
-  // if(leftOnline >= 2 && rightOnline >= 2 && frontOnline >= 2 && backOnline >= 2 && firstTurn == 0)
-  // {
-  //  if(df == 0)
-  //  {
-  //    junc_count++;
-  //    df = 1;
-  //  }
-  //  ////first junction ... transfer
-  // }
-  // else
-  //  df = 0;     ///for debouncing
+  if(leftOnline == 0 && rightOnline >= 2 && frontOnline >= 2 && backOnline == 0 && firstTurn == 1)  //the 1st turn
+  {
+    prevTurnFlag = turnFlag;
+    turnFlag = 2;
+    firstTurn = 0;
+  }
+  if(leftOnline >= 2 && rightOnline >= 2 && frontOnline >= 2 && backOnline >= 2 && firstTurn == 0)   //junction counter
+  {
+    if(flag_debounce)
+    {
+        if(prevTurnFlag == 3)
+          junc_count--;
+        else
+          junc_count++;
+        
+      // prevTurnFlag = turnFlag;
+      flag_debounce = false;
+    }
+  }
+  else
+    flag_debounce = true;
 
-  // if(junc_count == 1)
-  // {
-  //  while(bit_is_clear(PINF,6));
-  //  //closeClamp();
-  //  while(bit_is_set(PINF,6));
-  //  turnFlag == 0;
-  // }
+  if(junc_count == 1 && turnFlag == 2) //tranfer point for TZ1
+  {
+    botKill();
+    while(bit_is_clear(PINF,6));
+    closeClamp();
+    while(bit_is_set(PINF,6));
+    prevTurnFlag = turnFlag;
+    turnFlag = 0;
+  }
+  else if(junc_count == 2 && turnFlag == 0)
+  {
+    botKill();
+    prevTurnFlag = turnFlag;
+    turnFlag = 3;
+    pidAlign(1);
+    opt = 0;
+    while((-500 < error < 500) && (-500 < rotation < 500))
+    {
+      readSensorFront();
+      readSensorBack();
+      calcSensorValFront();
+      calcSensorValBack();
+      calcErrorFront();
+      calcErrorBack();
+      calcErrorAndRotation();
+      calcSpeedToMotors();
+      uploadSpeedLineFollow(maxPWM);
+    }
+    botKill();
+    ///throwFromTZ1();
+    prevTurnFlag = turnFlag;
+    turnFlag = 1;
+    pidAlign(0);
+  }
   
   calcErrorAndRotation();
 
@@ -1060,19 +1107,21 @@ void openClamp()
 
 void botKill()
 {
-  MOTORFF = 1;
-  MOTORFB = 1;
-  PWMF = 666;
+  MOTORFF = 0;
+  MOTORFB = 0;
+  PWMF = 0;
 
-  MOTORBF = 1;
-  MOTORBB = 1;
-  PWMB = 666;
+  MOTORBF = 0;
+  MOTORBB = 0;
+  PWMB = 0;
 
-  MOTORLF = 1;
-  MOTORLB = 1;
-  PWML = 666;
+  MOTORLF = 0;
+  MOTORLB = 0;
+  PWML = 0;
 
-  MOTORRF = 1;
-  MOTORRB = 1;
-  PWMR = 666;
+  MOTORRF = 0;
+  MOTORRB = 0;
+  PWMR = 0;
+
+  PORTD &= ~(1 << PD7);   //for base motor braking
 }
