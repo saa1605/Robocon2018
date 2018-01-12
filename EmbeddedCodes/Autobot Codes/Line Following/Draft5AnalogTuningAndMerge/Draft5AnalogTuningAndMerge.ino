@@ -129,35 +129,37 @@ void serialPrint()
   Serial.print(sRight);Serial.print(' ');
   Serial.print('\t');
   
+//  for(int i = 0; i < numOfSensors; i++)
+//  {
+//    Serial.print(sensorRawFront[i]);Serial.print(' ');
+//  }
+//  Serial.print("\t"); 
+//  for(int i = 0; i < numOfSensors; i++)
+//  {
+//    Serial.print(sensorRawBack[i]);Serial.print(' ');
+//  }
+//  Serial.print("\t");
+
   for(int i = 0; i < numOfSensors; i++)
   {
-    Serial.print(sensorRawFront[i]);Serial.print(' ');
-  }
-  Serial.print("\t"); 
-  for(int i = 0; i < numOfSensors; i++)
-  {
-    Serial.print(sensorRawBack[i]);Serial.print(' ');
+    Serial.print(sensorValFront[i]);Serial.print(" ");
   }
   Serial.print("\t");
-//  for(int i = 0; i < numOfSensors; i++)
-//  {
-//    Serial.print(sensorValFront[i]);Serial.print(" ");
-//  }
-//  Serial.print("\t");
-//  for(int i = 0; i < numOfSensors; i++)
-//  {
-//    Serial.print(sensorValBack[i]);Serial.print(" ");
-//  }
-//  Serial.print("\t");
+  for(int i = 0; i < numOfSensors; i++)
+  {
+    Serial.print(sensorValBack[i]);Serial.print(" ");
+  }
+  Serial.print("\t");
   
-  Serial.print("  errLeft = ");
-  Serial.print(errorLeft);
-  Serial.print(" errRight ");
-  Serial.print(errorRight);
+  Serial.print("  errBack = ");
+  Serial.print(errorBack);
+  Serial.print(" errFront ");
+  Serial.print(errorFront);
   Serial.print("  Err = ");
   Serial.print(error);
   Serial.print("  Rot = ");
   Serial.print(rotation);
+ ///
 //  Serial.print("  crntJnctn = ");
 //  Serial.print(currentJunction);
 //  Serial.print("  dsrdJnctn = ");
@@ -845,11 +847,21 @@ void calcSpeedToMotors()
 
 void uploadSpeedLineFollow(int maxPWMLine)
 {
-  sFront = map(sFront, 0 - (opt + kPRotation * 7000), (opt + kPRotation * 7000), 0 - maxPWM + 350, maxPWM - 350);
-  sLeft  = map(sLeft,  0 - 10000*kPError, 10000*kPError, 0 - maxPWMLine*0.5 + 100, maxPWMLine*0.5 - 100);
-  sBack  = map(sBack,  0 - (opt + kPRotation * 7000), (opt + kPRotation * 7000), 0 - maxPWM + 350, maxPWM - 350);
-  sRight = map(sRight, 0 - 10000*kPError, 10000*kPError, 0 - maxPWMLine*0.5 + 100, maxPWMLine*0.5 - 100);  
-
+  if(turnFlag == 0 || turnFlag == 1)
+  {
+    sFront = map(sFront, 0 - (opt + kPRotation * 7000), (opt + kPRotation * 7000), 0 - maxPWM + 350, maxPWM - 350);
+    sLeft  = map(sLeft,  0 - 10000*kPError, 10000*kPError, 0 - maxPWMLine*0.5 + 100, maxPWMLine*0.5 - 100);
+    sBack  = map(sBack,  0 - (opt + kPRotation * 7000), (opt + kPRotation * 7000), 0 - maxPWM + 350, maxPWM - 350);
+    sRight = map(sRight, 0 - 10000*kPError, 10000*kPError, 0 - maxPWMLine*0.5 + 100, maxPWMLine*0.5 - 100);  
+  }
+  else if (turnFlag == 2 || turnFlag == 3)
+  {
+    sFront = map(sLeft,  0 - 10000*kPError, 10000*kPError, 0 - maxPWMLine*0.5 + 100, maxPWMLine*0.5 - 100);
+    sLeft = map(sFront, 0 - (opt + kPRotation * 7000), (opt + kPRotation * 7000), 0 - maxPWM + 350, maxPWM - 350);
+    sBack = map(sRight, 0 - 10000*kPError, 10000*kPError, 0 - maxPWMLine*0.5 + 100, maxPWMLine*0.5 - 100);
+    sRight  = map(sBack,  0 - (opt + kPRotation * 7000), (opt + kPRotation * 7000), 0 - maxPWM + 350, maxPWM - 350);
+    
+  }
   if(sFront < -30)
   {
     sFront *= (-1);
