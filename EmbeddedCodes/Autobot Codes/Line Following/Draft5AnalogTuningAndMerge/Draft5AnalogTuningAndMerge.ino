@@ -6,36 +6,29 @@
 #include "mcp.h"
 #include <math.h>
 
-int pidMode = 1, toggle = 0;
+int pidMode = 1, toggle = 0;  //for pid tuning
 
 #define numOfSensors 8
 
-float alignKPError = 0, alignKDError = 0, alignKPRotation = 0, alignKDRotation = 0;
-int alignOpt = 600;
+float alignKPError = 0.20, alignKDError = 0, alignKPRotation = 0.32, alignKDRotation = 0;
+int alignOpt = 1500;
 
-float fastKPError = 0.32, fastKDError = 0, fastKPRotation = 0.20, fastKDRotation = 0;
+float fastKPError = 0.42, fastKDError = 0, fastKPRotation = 0.25, fastKDRotation = 0;
 int fastOpt = 2500;
 
-int frontOnline = 0, backOnline = 0, leftOnline = 0, rightOnline = 0;    /////////////////////////////
-
-//float normalKPError = 0.24, normalKDError = 0.04, normalKPRotation = 0.096, normalKDRotation = 0;
-//int normalOpt = 600;
-//
-//float fastKPError = 0.26, fastKDError = 0.05, fastKPRotation = 0.4, fastKDRotation = 0;
-//int fastOpt = 9500;
+int frontOnline = 0, backOnline = 0, leftOnline = 0, rightOnline = 0;
 
 int sensorMinLeft[numOfSensors]  = {4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000};
 int sensorMaxLeft[numOfSensors]  = {0, 0, 0, 0, 0, 0, 0, 0};
 int sensorMinRight[numOfSensors] = {4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000};
 int sensorMaxRight[numOfSensors] = {0, 0, 0, 0, 0, 0, 0, 0};
 
-int sensorMinFront[numOfSensors]  = {4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000};     /////////////////
-int sensorMaxFront[numOfSensors]  = {0, 0, 0, 0, 0, 0, 0, 0};                        //////////////////
-int sensorMinBack[numOfSensors] = {4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000};      ////////////////
-int sensorMaxBack[numOfSensors] = {0, 0, 0, 0, 0, 0, 0, 0};                             /////////////
+int sensorMinFront[numOfSensors]  = {4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000};
+int sensorMaxFront[numOfSensors]  = {0, 0, 0, 0, 0, 0, 0, 0};                        
+int sensorMinBack[numOfSensors] = {4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000};     
+int sensorMaxBack[numOfSensors] = {0, 0, 0, 0, 0, 0, 0, 0};                             
 
-#define maxPWM 350
-//float kPError = 0.0069, kDError = 0.0, kPRotation = 0.096, kDRotation = 0;
+int maxPWM = 666;                  ////// changed since : 16-1-18
 
 #define joystickBuffer 25
 #define maxJoystick (128 - joystickBuffer)
@@ -50,13 +43,11 @@ int sensorRawFront[numOfSensors], sensorValFront[numOfSensors], sensorRawBack[nu
 int turnFlag = 0;  //0-Left  1-Right  2-Forward  3-Back
 bool firstTurn = 1;   //0-after 1st turn and 1-before                                  
 
-//float kPError = normalKPError, kDError = normalKDError, kPRotation = normalKPRotation, kDRotation = normalKDRotation;
-//int opt = normalOpt;
 float kPError = fastKPError, kDError = fastKDError, kPRotation = fastKPRotation, kDRotation = fastKDRotation;
 int opt = fastOpt;
 
-int junc_count = 0;
-bool flag_debounce = true;
+int juncCount = 0;
+bool juncFlag = true;
 
 int decimal = 0;   //for aruco correction
 
@@ -66,7 +57,7 @@ int pwm = 666; //For PS2
 
 int LX = 0, LY = 0, RX = 0, RY = 0; //For PS2
 
-bool flap = 1;    
+bool flap = 1;  //manual flap flag
 
 // Main loop, read and display data
 //-----------------------------------------------------------------------
@@ -80,7 +71,11 @@ void setup()
   clampPistonInit();
   arucoInterfaceInit();
   spiMasterInit();
-  openClamp();                      
+  openClamp();
+  
+  DDRD &= ~(1 << PD1);  //just for practise
+  PORTD |= (1 << PD1);  //just for practise
+  
   PORTD &= ~(1 << PD6); //Throwing Motor brake
   Serial.println("Setup Over");
 }
@@ -157,31 +152,35 @@ void serialPrint()
 //  
 //  for(int i = 0; i < numOfSensors; i++)
 //  {
-//    Serial.print(sensorValLeft[i]);Serial.print(' ');
+//    Serial.print(sensorRawLeft[i]);Serial.print(' ');
 //  }
-//  Serial.print("\t"); 
+//  Serial.print("\t");
 //  for(int i = 0; i < numOfSensors; i++)
 //  {
 //    Serial.print(sensorValRight[i]);Serial.print(' ');
 //  }
 //  Serial.print("\t");
 
-   Serial.print("  errBack = ");
-   Serial.print(errorBack);
-   Serial.print(" errFront ");
-   Serial.print(errorFront);
-   Serial.print("  Err = ");
-   Serial.print(error);
-   Serial.print("  Rot = ");
-   Serial.print(rotation);
+//   Serial.print("  errLeft = ");
+//   Serial.print(errorLeft);
+//   Serial.print(" errRight ");
+//   Serial.print(errorRight);
+//   Serial.print("  Err = ");
+//   Serial.print(error);
+//   Serial.print("  Rot = ");
+//   Serial.print(rotation);
    Serial.print("  firstTurn = ");
    Serial.print(firstTurn);
-   Serial.print("  junc_count = ");
-   Serial.print(junc_count);
-   Serial.print(" sensorValFront[3] ");
-   Serial.print(sensorValFront[3]);   
-   Serial.print(" sensorValFront[4] ");
-   Serial.print(sensorValFront[4]);
+   Serial.print("  juncCount = ");
+   Serial.print(juncCount);
+   Serial.print(" sensorValLeft[4] ");
+   Serial.print(sensorValLeft[4]);   
+   Serial.print(" sensorValLeft[5] ");
+   Serial.print(sensorValLeft[5]);
+   Serial.print(" sensorValRight[4] ");
+   Serial.print(sensorValRight[4]);   
+   Serial.print(" sensorValRight[5] ");
+   Serial.print(sensorValRight[5]);
    Serial.print("  turnFlag = ");
    Serial.print(turnFlag);
   
@@ -479,7 +478,7 @@ void calcSensorValFront()
       sensorValFront[j] = 0;
     else if (sensorValFront[j] > 1000)
       sensorValFront[j] = 1000;
-  }
+  } 
 }
 void calcSensorValBack()
 {
@@ -516,6 +515,9 @@ void calcSensorValLeft()
     else if (sensorValLeft[j] > 1000)
       sensorValLeft[j] = 1000;
   }
+
+  sensorValLeft[7] = 0;   ///////haggu tha isleye
+  
 }
 
 void calibrateFront()
@@ -858,11 +860,13 @@ void pidAlign(int pidAlign)
   {
     kPError = alignKPError; kDError = alignKDError; kPRotation = alignKPRotation; kDRotation = alignKDRotation;
     opt = alignOpt;
+    maxPWM = 300;
   }
   else
   {
     kPError = fastKPError; kDError = fastKDError; kPRotation = fastKPRotation; kDRotation = fastKDRotation;
     opt = fastOpt;
+    maxPWM = 666;
   }
 }
 
@@ -1067,41 +1071,58 @@ int lineFollow()
   calcSensorValRight();
   calcErrorLeft();
   calcErrorRight();
+  
   //(sensorValFront[3] > 400 || sensorValFront[4] > 400)
   if(leftOnline == 0 && rightOnline >= 2 && frontOnline >= 2 && backOnline == 0 && firstTurn == 1)  //the 1st turn
   {
     turnFlag = 2;
     firstTurn = 2;
   }
-//(sensorValLeft[2] > 400 || sensorValLeft[3] > 400) && (sensorValRight[2] > 400 || sensorValRight[3] > 400)
- if(leftOnline >= 2 && rightOnline >= 2 && frontOnline >= 2 && backOnline >= 2 && firstTurn == 0)   //junction counter
- {
-   if(flag_debounce)
-   {
-       if(turnFlag == 1)    //Rightwards linefollow
-         junc_count--;
-       else
-         junc_count++;
-       
-     flag_debounce = false;
-   }
- }
- else
-   flag_debounce = true;
 
- if(junc_count == 1 && turnFlag == 2) //tranfer junction for TZ1
- {
-   botKill();
-   while(bit_is_clear(PINF,0));
-   closeClamp();
-   while(bit_is_set(PINF,0));
-   turnFlag = 0;
- }
-//  else if(junc_count == 2 && turnFlag == 0) //throwing junction of TZ1
-//  {
-//    botKill();
+  if((frontOnline >= 5 || leftOnline >= 5 || rightOnline >= 5) && firstTurn == 0)
+  {
+    botKill();
+    delay(1000);  //fuck this afterwards
+    pidAlign(1);
+  }
+
+  if(frontOnline >= 2 && backOnline >= 2 && leftOnline >= 2 && rightOnline >= 2 && firstTurn==0)   //junction counter
+  {
+    if(juncFlag)
+    {
+      if(turnFlag == 1)    //Rightwards linefollow
+        juncCount--;
+      else
+        juncCount++;
+       
+      juncFlag = false;
+    }
+  }
+  else
+    juncFlag = true;
+
+  if(juncCount == 1 && (turnFlag == 2 || turnFlag == 1)) //tranfer junction for TZ1
+  {
+    botKill();
+    pidAlign(0);
+//    while(bit_is_set(PIND,1));  ///just for practise
+//    juncCount = 0;    //just for practise
+    while(bit_is_clear(PINF,0));
+    PORTC |= 0xFF;
+    delay(1000);
+    PORTC = 0x00;
+//    gpioToDecimal();
+    closeClamp();
+    while(bit_is_set(PINF,0));
+    turnFlag = 0;
+  }
+  else if(juncCount == 2 && turnFlag == 0) //throwing junction of TZ1
+  {
+    botKill();
+//    while(bit_is_set(PIND,1));  //just for practice
 //    turnFlag = 3;
-//    pidAlign(1);
+    pidAlign(1);
+    while(bit_is_set(PIND,1));  //just for practice
 //    opt = 0;
 //    while((-500 < error < 500) && (-500 < rotation < 500))
 //    {
@@ -1116,10 +1137,10 @@ int lineFollow()
 //      uploadSpeedLineFollow(maxPWM);
 //    }
 //    botKill();
-//    ///throwFromTZ1();
-//    turnFlag = 1;
-//    pidAlign(0);
-//  }
+//    //throwFromTZ1();
+    turnFlag = 1;
+    pidAlign(0);
+  }
 
   calcErrorAndRotation();
   calcSpeedToMotors();
