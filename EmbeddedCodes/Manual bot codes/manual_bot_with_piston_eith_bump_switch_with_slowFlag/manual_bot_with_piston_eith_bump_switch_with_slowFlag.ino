@@ -65,8 +65,9 @@ void loop()
     {
       servoInit();
       flapOpen();
+      PORTA &= ~(1 << 0); ///changed by shashank
       zeroAllReg();
-      pwm1_init();
+      pwm1_init(); 
     }
 
     if (psx_button_click(PSB_SELECT, flag_SELECT))
@@ -243,7 +244,7 @@ void baseMotorsMotion()
       PWMF = map(sFront, 0, 666, 0, 255);
     }
     else {
-      PWMF = map(sFront, 0, 666, 0, 64);
+      PWMF = map(sFront, 0, 666, 0, 85);
     }
     //    PWMF = sFront;
   }
@@ -258,7 +259,7 @@ void baseMotorsMotion()
       PWMF = map(sFront, 0, 666, 0, 255);
     }
     else {
-      PWMF = map(sFront, 0, 666, 0, 64);
+      PWMF = map(sFront, 0, 666, 0, 85);
     }
   }
   else
@@ -279,7 +280,7 @@ void baseMotorsMotion()
       PWMB = sBack;
     }
     else {
-      PWMB = map(sBack, 0, 666, 0, 167);
+      PWMB = map(sBack, 0, 666, 0, 222);
     }
   }
   else if (sBack > 30)
@@ -292,7 +293,7 @@ void baseMotorsMotion()
       PWMB = sBack;
     }
     else {
-      PWMB = map(sBack, 0, 666, 0, 167);
+      PWMB = map(sBack, 0, 666, 0, 222);
     }
   }
   else
@@ -315,7 +316,7 @@ void baseMotorsMotion()
       PWML = sLeft;
     }
     else {
-      PWML = map(sLeft, 0, 666, 0, 167);
+      PWML = map(sLeft, 0, 666, 0, 222);
     }
   }
   else if (sLeft > 30)
@@ -328,7 +329,7 @@ void baseMotorsMotion()
       PWML = sLeft;
     }
     else {
-      PWML = map(sLeft, 0, 666, 0, 167);
+      PWML = map(sLeft, 0, 666, 0, 222);
     }
   }
   else
@@ -349,7 +350,7 @@ void baseMotorsMotion()
       PWMR = sRight;
     }
     else {
-      PWMR = map(sRight, 0, 666, 0, 167);
+      PWMR = map(sRight, 0, 666, 0, 222);
     }
   }
   else if (sRight > 30)
@@ -362,7 +363,7 @@ void baseMotorsMotion()
       PWMR = sRight;
     }
     else {
-      PWMR = map(sRight, 0, 666, 0, 167);
+      PWMR = map(sRight, 0, 666, 0, 222);
     }
   }
   else
@@ -372,7 +373,7 @@ void baseMotorsMotion()
     PWMR = 666;
   }
 
-  if (psx_button_press(PSB_R1)) {
+  if (psx_button_press(PSB_R1)&&!(stickRX > joystickBuffer || stickRX < 0 - joystickBuffer)&&!(stickLY > joystickBuffer || stickLY < 0 - joystickBuffer)) {
     if (slowFlag == 0) {
       MOTORFA = 1;
       MOTORFB = 0;
@@ -411,7 +412,7 @@ void baseMotorsMotion()
     Serial.println("Spot right");
   }
 
-  if (psx_button_press(PSB_L1)) {
+  if (psx_button_press(PSB_L1)&&!(stickRX > joystickBuffer || stickRX < 0 - joystickBuffer)&&!(stickLY > joystickBuffer || stickLY < 0 - joystickBuffer)) {
     if (slowFlag == 0) {
       MOTORFA = 0;
       MOTORFB = 1;
@@ -521,7 +522,7 @@ void flapOpen()
 
 void flapClose()
 {
-  OCR2 = 20;
+  OCR2 = 30;
   _delay_ms(150);
 }
 void servoInit()
@@ -552,8 +553,8 @@ void servoInit()
   DDRB |= (1 << 7);
   TCCR2 = 0b01101101;
   TCNT2 = 0x00;
-  OCR2 = 0x00;
-
+//  OCR2 = 0x00;
+//  _delay_ms(150); /////changed by shashank
 }
 ISR(INT4_vect) {
   LMGA = 0;
@@ -575,7 +576,7 @@ void zeroAllReg()
   PWM2_DIR = 0;
   TCCR2 = 0x00; //stop
   TCNT2 = 0x00; //setup
-  OCR2 = 0x00;
+//  OCR2 = 0x00;    //changed by shashank
   TCCR2 = 0x00; //start Timer //fPWM = 1kHZ; prescaler = 8; No ICR
 }
 

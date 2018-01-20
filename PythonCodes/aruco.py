@@ -3,7 +3,7 @@ import cv2
 import cv2.aruco as aruco
 counter = 0
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 while(True):
     # Capture frame-by-frame
