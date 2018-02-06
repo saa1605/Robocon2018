@@ -2,9 +2,9 @@ import cv2
 import cv2.aruco as aruco
 import numpy as np
 import math
-import serial
+# import serial
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 aruco_dict = aruco.Dictionary_get(aruco.DICT_5X5_1000)
 parameters = aruco.DetectorParameters_create()
 step = 10
