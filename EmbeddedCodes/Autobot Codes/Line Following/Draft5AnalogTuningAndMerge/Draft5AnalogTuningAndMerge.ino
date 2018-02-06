@@ -41,7 +41,7 @@ int sensorRawRight[numOfSensors], sensorValRight[numOfSensors], sensorRawLeft[nu
 int sensorRawFront[numOfSensors], sensorValFront[numOfSensors], sensorRawBack[numOfSensors], sensorValBack[numOfSensors];
 
 int turnFlag = 0;  //0-Left  1-Right  2-Forward  3-Back
-bool firstTurn = 1;   //0-after 1st turn and 1-before                                  
+int firstTurn = 1;   //0-after 1st turn and 1-before                                  
 
 float kPError = fastKPError, kDError = fastKDError, kPRotation = fastKPRotation, kDRotation = fastKDRotation;
 int opt = fastOpt;
